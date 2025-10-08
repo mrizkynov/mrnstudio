@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>3D Interactive World</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* --- Base Styles --- */
+    body { 
+      margin: 0; overflow: hidden; font-family: 'Poppins', sans-serif;
+      background-color: #f0f0f0; color: #333;
+    }
+    canvas { display: block; }
+
+    /* --- UI Elements --- */
+    #instructions-ui {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 12px;
+      text-align: center; z-index: 100; box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      border: 1px solid #e0e0e0; max-width: 90%; width: 400px;
+      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    }
+    #instructions-ui h2 { margin-top: 0; color: #1a1a1a; font-weight: 600; }
+    #instructions-ui p { line-height: 1.6; color: #555; }
+    #instructions-ui button {
+        background-color: #333; color: white; border: none; padding: 12px 25px;
+        border-radius: 8px; cursor: pointer; margin-top: 20px; font-size: 1em;
+        font-family: 'Poppins', sans-serif; font-weight: 600;
+        transition: background-color: 0.3s, transform 0.2s;
+    }
+    #instructions-ui button:hover { background-color: #1a1a1a; transform: translateY(-2px); }
+    #joystick-zone { position: absolute; bottom: 20px; left: 20px; width: 150px; height: 150px; z-index: 50; display: none; }
+    #coordinates-ui {
+      position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.8);
+      padding: 8px 12px; border-radius: 8px; font-size: 14px; color: #333;
+      z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    #external-close-button {
+        position: fixed;
+        top: 25px;
+        right: 25px;
+        z-index: 201; /* Higher than the shop panel */
+        width: 40px;
+        height: 40px;
+        background: rgba(0,0,0,0.4);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 50%;
+        font-size: 20px;
+        font-family: sans-serif;
+        line-height: 38px;
+        text-align: center;
+        cursor: pointer;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.4s, transform 0.4s;
+        transform: scale(0.8);
+    }
+    #external-close-button:hover {
+        background: rgba(0,0,0,0.6);
+    }
+    #external-close-button.visible {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: scale(1);
+    }
+
+    .mini-panel {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.9); padding: 15px 25px; border-radius: 10px;
+      border: 1px solid #e0e0e0; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex;
+      gap: 20px; z-index: 102; opacity: 0; visibility: hidden;
+      transition: opacity 0.4s, visibility 0.4s; align-items: center;
+    }
+    .mini-panel.visible { opacity: 1; visibility: visible; }
+    .icon {
+      font-size: 28px; cursor: pointer; transition: transform 0.2s, filter 0.3s, opacity 0.3s;
+      filter: grayscale(1); opacity: 0.7;
+    }
+    .icon:hover { transform: scale(1.2) rotate(5deg); filter: grayscale(0); opacity: 1; }
+    
+    #mobile-close-btn {
+        display: none; position: absolute; top: 10px; right: 10px; width: 30px; height: 30px;
+        background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%;
+        font-size: 18px; line-height: 30px; text-align: center; cursor: pointer; z-index: 103;
+    }
+
+    #shop-ui {
+        position: absolute; top: 50%; left: 50%; width: 450px; height: 500px;
+        background: transparent; border: none;
+        transform: translate(-50%, -50%) scale(0.9); z-index: 200;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+        display: flex; flex-direction: column; font-family: 'Inter', sans-serif;
+        color: #fff; opacity: 0; visibility: hidden;
+        padding: 50px 30px; box-sizing: border-box;
+        user-select: none; /* Disable text selection */
+        -webkit-user-select: none; /* Safari */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE */
+    }
+     #shop-ui::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        background-image: url('https://i.ibb.co/6gB5yH3/wath.png');
+        background-size: 100% 100%; background-repeat: no-repeat; z-index: -1;
+    }
+     #shop-ui-background {
+        position: absolute; top: 15px; left: 15px; right: 15px; bottom: 15px;
+        background: rgba(10, 10, 20, 0.1);
+        backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        z-index: -2; border-radius: 15px;
+    }
+    #shop-ui.visible { transform: translate(-50%, -50%) scale(1); opacity: 1; visibility: visible; }
+    
+    .shop-header {
+        display: flex; padding: 0 0 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        flex-shrink: 0; margin-bottom: 15px;
+        overflow-x: auto;
+    }
+    .shop-header::-webkit-scrollbar { height: 6px; }
+    .shop-header::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px;}
+    .shop-header::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.4); border-radius: 3px; }
+
+
+    .tab-button {
+        padding: 8px 16px; cursor: pointer; color: rgba(255,255,255,0.7); font-weight: 500;
+        border: 1px solid transparent; border-bottom: none;
+        transition: all 0.3s; text-shadow: 0 1px 2px rgba(0,0,0,0.2); font-size: 14px;
+        white-space: nowrap; flex-shrink: 0;
+    }
+    .tab-button.active {
+        color: #fff; background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.2);
+        border-top-left-radius: 5px; border-top-right-radius: 5px;
+    }
+    
+    .shop-body { display: grid; grid-template-columns: 140px 1fr; padding: 0; gap: 15px; flex-grow: 1; min-height: 0;}
+
+    .item-grid { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 8px; }
+    .item-grid::-webkit-scrollbar { width: 6px; }
+    .item-grid::-webkit-scrollbar-track { background: transparent; }
+    .item-grid::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.5); border-radius: 3px; }
+
+    .shop-item {
+        display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; padding: 8px;
+        text-align: left; cursor: pointer; transition: all 0.2s;
+    }
+    .shop-item:hover { transform: scale(1.02); background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.4); }
+    .shop-item.selected { background: rgba(100, 150, 255, 0.4); border-color: rgba(150, 200, 255, 0.8); }
+    .shop-item .icon { font-size: 20px; line-height: 1; filter: none; opacity: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.2); flex-shrink: 0; width: 25px; text-align: center; }
+    .shop-item .icon svg { width: 24px; height: 24px; stroke: #fff; }
+    .shop-item span { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.9); text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    
+    #item-details { background: rgba(0, 0, 0, 0.2); border-radius: 10px; position: relative; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.2); }
+    
+    .slider-nav { display: flex; align-items: center; justify-content: center; gap: 15px; position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); z-index: 10; }
+    .nav-arrow {
+        background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.3); color: #fff;
+        cursor: pointer; width: 30px; height: 30px; border-radius: 50%;
+        display: flex; justify-content: center; align-items: center; font-size: 18px; transition: background-color: 0.3s;
+    }
+    .nav-arrow:hover { background: rgba(0,0,0,0.5); }
+    .dots { display: flex; gap: 8px; }
+    .dot { width: 8px; height: 8px; background-color: rgba(255, 255, 255, 0.4); border-radius: 50%; transition: background-color: 0.3s; }
+    .dot.active { background-color: #fff; }
+    
+    @media (max-width: 768px) {
+        #shop-ui {
+            width: 100vw;
+            height: 90vh; /* Adjusted for better fit */
+            max-width: 100vw;
+            max-height: 90vh;
+            top: auto;
+            bottom: 0;
+            left: 0;
+            border-radius: 20px 20px 0 0;
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            padding: 25px; /* Unified padding */
+        }
+        #shop-ui::before, #shop-ui-background {
+             border-radius: 20px 20px 0 0;
+        }
+        #shop-ui.visible {
+            transform: translateY(0);
+        }
+        .shop-body {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .item-grid {
+            max-height: 120px;
+            flex-shrink: 0;
+        }
+        #item-details {
+            flex-grow: 1;
+            min-height: 250px; /* Generous min-height for preview */
+        }
+    }
+  </style>
+  
+  <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@v0.163.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.163.0/examples/jsm/" } }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.min.js"></script>
+</head>
+<body>
+  <div id="instructions-ui">
+    <h2>Welcome!</h2>
+    <p>Use <b>W/A/S/D</b> or the <b>ARROW KEYS</b> to move.</p>
+    <p>Fly into the glowing zones to see more options.</p>
+    <button id="start-button">BEGIN</button>
+  </div>
+
+  <div id="joystick-zone"></div>
+  <div id="coordinates-ui">Position: X:0 Y:0 Z:0</div>
+
+  <div id="social-panel" class="mini-panel">
+      <div class="icon" title="Facebook">📘</div> 
+      <div class="icon" title="Instagram">📸</div> 
+      <div class="icon" title="TikTok">🎵</div>
+      <button id="mobile-close-btn">X</button>
+  </div>
+  
+  <button id="external-close-button">×</button>
+
+  <div id="shop-ui">
+      <div id="shop-ui-background"></div>
+      <div class="shop-header">
+          <!-- Tabs will be populated dynamically -->
+      </div>
+      <div class="shop-body">
+          <div class="item-grid">
+              <!-- Items will be populated dynamically -->
+          </div>
+          <div id="item-details">
+               <div class="slider-nav">
+                  <button class="nav-arrow prev">&lt;</button>
+                  <div class="dots"></div>
+                  <button class="nav-arrow next">&gt;</button>
+              </div>
+          </div>
+      </div>
+      <!-- Footer has been removed -->
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // --- Main Scene Variables ---
+    let player, targetVelocity = new THREE.Vector3(), velocity = new THREE.Vector3();
+    const move = { forward: 0, backward: 0, left: 0, right: 0 };
+    const hitboxes = [], hitboxMarkers = [], animatedGroups = [], mixers = [];
+    let playerBox = new THREE.Box3(), controls;
+    let targetMaxDistance = 30;
+    const dayColors = { bg: new THREE.Color(0xf0f0f0), ambient: new THREE.Color(0xffffff), directional: new THREE.Color(0xffe4b4), ground: new THREE.Color(0xffffff) };
+    const scene = new THREE.Scene(), renderer = new THREE.WebGLRenderer({ antialias: true }), camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000), clock = new THREE.Clock();
+    const gltfLoader = new GLTFLoader();
+
+    // --- Preview Scene Variables ---
+    let previewScene, previewCamera, previewRenderer, previewControls, previewModelGroup;
+    let currentPreviewIndex = 0;
+    
+    // --- Interaction State ---
+    let canOpenShopPanel = true;
+    
+    // --- SVG Icons ---
+    const svgIcons = {
+        outerwear: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21V19C16 16.7909 14.2091 15 12 15V15C9.79086 15 8 16.7909 8 19V21"></path><path d="M12 15V3L19 5V12L12 15L5 12V5L12 3Z"></path></svg>`,
+        innerwear: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v5.25a2 2 0 002 2h8a2 2 0 002-2V3"></path><path d="M18 21H6a2 2 0 01-2-2V10.25h16V19a2 2 0 01-2 2z"></path></svg>`,
+        legwear: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v20M16 2v20M8 2h8a2 2 0 012 2v2a2 2 0 01-2 2h-3m-2 0H6a2 2 0 01-2-2V4a2 2 0 012-2h2"></path></svg>`,
+        shoes: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l4.48-2.36a2 2 0 011.04 0L15 17.5V13a2 2 0 012-2h3v5a2 2 0 01-2 2h-1.5"></path><path d="M4.5 21a2 2 0 002 2h11a2 2 0 002-2v-2"></path><path d="M7 13.5c-1.33 1-2 2.5-2 4.5"></path></svg>`
+    };
+
+    // --- MODULAR DATA CONFIG ---
+    const objectModels = {
+        padvyModel: { path: 'https://cdn.glitch.global/e84a1d47-76a1-4549-9133-c534c752c42c/padvy3d.glb?v=1697288607834' },
+        clothmodel: { path: 'https://cdn.glitch.global/e84a1d47-76a1-4549-9133-c534c752c42c/clothmodel.glb?v=1697288617880' },
+        mrn: { path: 'https://cdn.glitch.global/e84a1d47-76a1-4549-9133-c534c752c42c/mrn.glb?v=1697288623049' },
+        search: { path: 'https://cdn.glitch.global/e84a1d47-76a1-4549-9133-c534c752c42c/search.glb?v=1697288640183' },
+    };
+    
+    const productCategories = {
+        "PRODUCT 1": [
+            { name: "Outerwear", icon: "outerwear", models: ["padvyModel", "mrn"] },
+            { name: "Innerwear", icon: "innerwear", models: ["clothmodel"] }
+        ],
+        "PRODUCT 2": [
+            { name: "Legwear", icon: "legwear", models: ["mrn"] },
+            { name: "Shoes", icon: "shoes", models: ["search", "padvyModel"] }
+        ]
+    };
+
+    const orbitingObjectsData = [{ 
+        id: 'centralGeometry', 
+        position: new THREE.Vector3(0, 7, 0), 
+        centralObject: { type: 'icosahedron', scale: new THREE.Vector3(4, 4, 4) }, 
+        orbitingIcons: [
+            { type: 'mesh', geometry: 'Torus', args: [0.8, 0.15, 16, 100], orbitRadius: 12, speed: 0.15, offset: 0 },
+            { type: 'mesh', geometry: 'Box', args: [1, 1, 1], orbitRadius: 12, speed: -0.12, offset: Math.PI * 2 / 3 },
+            { type: 'mesh', geometry: 'Icosahedron', args: [0.9, 0], orbitRadius: 12, speed: 0.1, offset: Math.PI * 4 / 3 },
+        ]
+    }];
+
+    const hitboxData = [{ type: 'social', position: new THREE.Vector3(-35.6, 3.5, -45), size: new THREE.Vector3(8, 8, 8), markerColor: 0x00aaff },{ type: 'shop', position: new THREE.Vector3(-25.9, 3.5, -22.1), size: new THREE.Vector3(8, 8, 8), markerColor: 0xff44aa },];
+        
+    function init() {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(dayColors.bg);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
+        scene.background = dayColors.bg;
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.enabled = true; controls.enableDamping = true; controls.dampingFactor = 0.05;
+        controls.screenSpacePanning = false; controls.maxPolarAngle = Math.PI / 2 - 0.1;
+        controls.minDistance = 5; controls.maxDistance = 30;
+        scene.add(new THREE.AmbientLight(dayColors.ambient, 1.5));
+        const directionalLight = new THREE.DirectionalLight(dayColors.directional, 2.5);
+        directionalLight.position.set(20, 40, 10); directionalLight.castShadow = true;
+        scene.add(directionalLight);
+        createPlayer(); createHitboxesAndMarkers();
+        orbitingObjectsData.forEach(createOrbitingObjectGroup);
+        const platform = new THREE.Mesh(...Object.values(createFloatingPlatform()));
+        platform.position.y = -2; platform.receiveShadow = true;
+        scene.add(platform);
+        camera.position.set(0, 10, 25);
+        initPreviewScene();
+        setupEventListeners();
+        if ('ontouchstart' in window) {
+            document.getElementById('joystick-zone').style.display = 'block';
+            setupJoystick();
+        }
+        buildTabs();
+        updateShopCategory(Object.keys(productCategories)[0]);
+        animate();
+    }
+    
+    function buildTabs() {
+        const header = document.querySelector('.shop-header');
+        header.innerHTML = '';
+        Object.keys(productCategories).forEach((key, index) => {
+            const tab = document.createElement('div');
+            tab.className = 'tab-button';
+            if (index === 0) tab.classList.add('active');
+            tab.textContent = key;
+            tab.addEventListener('click', () => {
+                if (tab.classList.contains('active')) return;
+                document.querySelector('.tab-button.active').classList.remove('active');
+                tab.classList.add('active');
+                updateShopCategory(key);
+            });
+            header.appendChild(tab);
+        });
+    }
+
+    function initPreviewScene() {
+        const container = document.getElementById('item-details');
+        previewScene = new THREE.Scene();
+        const rect = container.getBoundingClientRect();
+        previewCamera = new THREE.PerspectiveCamera(50, rect.width / rect.height, 0.1, 100);
+        previewCamera.position.z = 2.5;
+        previewRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        previewRenderer.setSize(rect.width, rect.height);
+        previewRenderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(previewRenderer.domElement);
+        previewControls = new OrbitControls(previewCamera, previewRenderer.domElement);
+        previewControls.enableZoom = false; previewControls.enablePan = false;
+        previewControls.autoRotate = true; previewControls.autoRotateSpeed = 1.0;
+        const ambient = new THREE.AmbientLight(0xffffff, 1.5);
+        previewScene.add(ambient);
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
+        keyLight.position.set(1, 1, 1);
+        previewScene.add(keyLight);
+        previewModelGroup = new THREE.Group();
+        previewScene.add(previewModelGroup);
+    }
+
+    function setShopUIVisibility(visible) {
+        const shopPanel = document.getElementById('shop-ui');
+        const externalCloseBtn = document.getElementById('external-close-button');
+        if (visible) {
+            shopPanel.classList.add('visible');
+            externalCloseBtn.classList.add('visible');
+        } else {
+            shopPanel.classList.remove('visible');
+            externalCloseBtn.classList.remove('visible');
+        }
+    }
+
+    function setupEventListeners() {
+        window.addEventListener('resize', onWindowResize);
+        window.addEventListener('keydown', onKeyDown);
+        window.addEventListener('keyup', onKeyUp);
+        
+        document.getElementById('start-button').addEventListener('click', () => {
+            document.getElementById('instructions-ui').style.opacity = '0';
+            setTimeout(() => { document.getElementById('instructions-ui').style.display = 'none'; }, 500);
+        });
+        document.getElementById('mobile-close-btn').addEventListener('click', () => document.getElementById('social-panel').classList.remove('visible'));
+        
+        document.getElementById('external-close-button').addEventListener('click', () => {
+            setShopUIVisibility(false);
+            canOpenShopPanel = false;
+        });
+
+        document.querySelector('.slider-nav .prev').addEventListener('click', () => navigatePreview(-1));
+        document.querySelector('.slider-nav .next').addEventListener('click', () => navigatePreview(1));
+    }
+
+    function updateShopCategory(categoryKey) {
+        const items = productCategories[categoryKey] || [];
+        const itemGrid = document.querySelector('.item-grid');
+        itemGrid.innerHTML = ''; 
+
+        items.forEach((itemData) => {
+            const itemEl = document.createElement('div');
+            itemEl.className = 'shop-item';
+            itemEl.innerHTML = `<div class="icon">${svgIcons[itemData.icon]}</div><span>${itemData.name}</span>`;
+            itemEl.addEventListener('click', () => {
+                document.querySelector('.shop-item.selected')?.classList.remove('selected');
+                itemEl.classList.add('selected');
+                loadPreviewModelsForItem(itemData.models || []);
+            });
+            itemGrid.appendChild(itemEl);
+        });
+        
+        if (itemGrid.firstChild) {
+            itemGrid.firstChild.click(); // Automatically click the first item
+        } else {
+             loadPreviewModelsForItem([]); // Clear preview if category is empty
+        }
+    }
+    
+    function loadPreviewModelsForItem(modelKeys) {
+        while(previewModelGroup.children.length > 0){ 
+            previewModelGroup.remove(previewModelGroup.children[0]); 
+        }
+
+        const dotsContainer = document.querySelector('.slider-nav .dots');
+        dotsContainer.innerHTML = '';
+        
+        if (!modelKeys || modelKeys.length === 0) {
+            return;
+        }
+
+        modelKeys.forEach((key, index) => {
+            loadGltfModel(key, (model) => {
+                model.visible = (index === 0);
+                previewModelGroup.add(model);
+            });
+            const dot = document.createElement('span');
+            dot.classList.add('dot');
+            if (index === 0) dot.classList.add('active');
+            dotsContainer.appendChild(dot);
+        });
+        currentPreviewIndex = 0;
+    }
+
+
+    function loadGltfModel(modelKey, onComplete) {
+        const modelInfo = objectModels[modelKey];
+        if (!modelInfo) {
+            console.warn(`Model key "${modelKey}" not found.`);
+            onComplete(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshNormalMaterial()));
+            return;
+        }
+        gltfLoader.load(modelInfo.path, 
+            (gltf) => {
+                const model = gltf.scene;
+                const box = new THREE.Box3().setFromObject(model);
+                const size = box.getSize(new THREE.Vector3());
+                const center = box.getCenter(new THREE.Vector3());
+                const maxSize = Math.max(size.x, size.y, size.z);
+                const scale = 1.5 / maxSize;
+                model.scale.multiplyScalar(scale);
+                model.position.sub(center.multiplyScalar(scale));
+                onComplete(model, gltf.animations);
+            }, 
+            undefined, 
+            (error) => {
+                console.error(`Error loading GLB for key "${modelKey}":`, error);
+                onComplete(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshNormalMaterial()));
+            }
+        );
+    }
+    
+    function navigatePreview(direction) {
+        if (previewModelGroup.children.length === 0) return;
+        const newIndex = (currentPreviewIndex + direction + previewModelGroup.children.length) % previewModelGroup.children.length;
+        updatePreviewSlide(newIndex);
+    }
+
+    function updatePreviewSlide(index) {
+        previewModelGroup.children.forEach((child, i) => child.visible = (i === index));
+        document.querySelectorAll('.slider-nav .dot').forEach((dot, i) => dot.classList.toggle('active', i === index));
+        currentPreviewIndex = index;
+    }
+    
+    function createPlayer() { player = new THREE.Group(); player.position.set(0, 3.5, 10); scene.add(player); const ufoBodyMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.8, roughness: 0.2 }); const bodyMesh = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.4, 32), ufoBodyMat); bodyMesh.castShadow = true; player.add(bodyMesh); const cockpitMat = new THREE.MeshStandardMaterial({ color: 0x87ceeb, transparent: true, opacity: 0.5, roughness: 0.1 }); const cockpitMesh = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), cockpitMat); cockpitMesh.position.y = 0.2; player.add(cockpitMesh); }
+    function createHitboxesAndMarkers() { const hitboxMaterial = new THREE.MeshBasicMaterial({ visible: false }); hitboxData.forEach(data => { const hitboxGeo = new THREE.BoxGeometry(data.size.x, data.size.y, data.size.z); const hitboxMesh = new THREE.Mesh(hitboxGeo, hitboxMaterial); hitboxMesh.position.copy(data.position); hitboxMesh.userData.type = data.type; hitboxMesh.userData.box = new THREE.Box3().setFromObject(hitboxMesh); scene.add(hitboxMesh); hitboxes.push(hitboxMesh); const markerMat = new THREE.MeshBasicMaterial({ color: data.markerColor, transparent: true, opacity: 0.5 }); const markerMesh = new THREE.Mesh(hitboxGeo, markerMat); markerMesh.position.copy(data.position); scene.add(markerMesh); hitboxMarkers.push(markerMesh); }); }
+    
+    function createOrbitingObjectGroup(data) {
+        const group = new THREE.Group();
+        group.position.copy(data.position);
+        scene.add(group);
+
+        const centralMaterial = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.9, roughness: 0.2 });
+        const centralGeo = new THREE.IcosahedronGeometry(data.centralObject.scale.x, 1);
+        const centralMesh = new THREE.Mesh(centralGeo, centralMaterial);
+        centralMesh.castShadow = true;
+        group.add(centralMesh);
+        group.userData.geometryMesh = centralMesh;
+        
+        const icons = [];
+        const iconMaterial = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.4 });
+        data.orbitingIcons.forEach(iconData => {
+            let iconGeo;
+            switch(iconData.geometry) {
+                case 'Torus': iconGeo = new THREE.TorusGeometry(...iconData.args); break;
+                case 'Box': iconGeo = new THREE.BoxGeometry(...iconData.args); break;
+                case 'Icosahedron': iconGeo = new THREE.IcosahedronGeometry(...iconData.args); break;
+                default: iconGeo = new THREE.SphereGeometry(0.8);
+            }
+            const icon = new THREE.Mesh(iconGeo, iconMaterial);
+            icon.castShadow = true;
+            icon.userData = iconData;
+            group.add(icon);
+            icons.push(icon);
+        });
+        group.userData.icons = icons;
+        animatedGroups.push(group);
+    }
+    
+    function createFloatingPlatform() { const platformShape = new THREE.Shape(); const w = 110, h = 80; platformShape.moveTo(-w, 0); platformShape.bezierCurveTo(-w, h/2, -w/2, h, 0, h); platformShape.bezierCurveTo(w/2, h, w, h/2, w, 0); platformShape.bezierCurveTo(w, -h/2, w/2, -h, 0, -h); platformShape.bezierCurveTo(-w/2, -h, -w, -h/2, -w, 0); const extrudeSettings = { depth: 4, bevelEnabled: true, bevelThickness: 2, bevelSize: 3, bevelSegments: 16 }; const geometry = new THREE.ExtrudeGeometry(platformShape, extrudeSettings); geometry.center(); geometry.rotateX(Math.PI / 2); const topMaterial = new THREE.MeshStandardMaterial({ color: dayColors.ground, roughness: 0.8 }); const sideMaterial = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.8 }); return { geometry, materials: [topMaterial, sideMaterial] }; }
+    function onWindowResize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); if (previewRenderer) { const container = document.getElementById('item-details'); const rect = container.getBoundingClientRect(); previewCamera.aspect = rect.width / rect.height; previewCamera.updateProjectionMatrix(); previewRenderer.setSize(rect.width, rect.height); } }
+    function onKeyDown(e) { if (e.code === 'KeyW' || e.code === 'ArrowUp') move.forward = 1; if (e.code === 'KeyS' || e.code === 'ArrowDown') move.backward = 1; if (e.code === 'KeyA' || e.code === 'ArrowLeft') move.left = 1; if (e.code === 'KeyD' || e.code === 'ArrowRight') move.right = 1; }
+    function onKeyUp(e) { if (e.code === 'KeyW' || e.code === 'ArrowUp') move.forward = 0; if (e.code === 'KeyS' || e.code === 'ArrowDown') move.backward = 0; if (e.code === 'KeyA' || e.code === 'ArrowLeft') move.left = 0; if (e.code === 'KeyD' || e.code === 'ArrowRight') move.right = 0; }
+    function setupJoystick() { const joystick = nipplejs.create({ zone: document.getElementById('joystick-zone'), mode: 'static', position: { left: '80px', bottom: '80px' }, color: 'rgba(0, 0, 0, 0.4)', size: 120 }); joystick.on('move', (evt, data) => { const angle = data.angle.radian, force = Math.min(data.force, 1); const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).setY(0); const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion).setY(0); targetVelocity = forward.multiplyScalar(Math.sin(angle)).add(right.multiplyScalar(Math.cos(angle))).multiplyScalar(force * 0.4); }); joystick.on('end', () => { targetVelocity.set(0, 0, 0); }); }
+    
+    function updatePlayer() { if (!player) return; if (!('ontouchstart' in window)) { const speed = 0.4; const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).setY(0); const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion).setY(0); targetVelocity.set(0,0,0).add(forward.multiplyScalar(move.forward - move.backward)).add(right.multiplyScalar(move.right - move.left)); if(targetVelocity.length() > 0) targetVelocity.normalize().multiplyScalar(speed); } velocity.lerp(targetVelocity, 0.1); if (velocity.length() > 0.01) player.position.add(velocity); player.position.y = 3.5 + Math.sin(clock.getElapsedTime() * 1.5) * 0.3; const tiltTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(velocity.z * 1.5, 0, -velocity.x * 1.5, 'XYZ')); player.quaternion.slerp(tiltTarget, 0.1); }
+    
+    function updateInteractions() { 
+        if (!player) return; 
+        playerBox.setFromObject(player); 
+        const socialPanel = document.getElementById('social-panel');
+        const shopPanel = document.getElementById('shop-ui');
+        let isShopOpen = shopPanel.classList.contains('visible');
+        let isSocialOpen = socialPanel.classList.contains('visible');
+
+        let intersectingShop = false;
+        let intersectingSocial = false;
+
+        for (const hitbox of hitboxes) {
+            if (playerBox.intersectsBox(hitbox.userData.box)) {
+                if (hitbox.userData.type === 'social') intersectingSocial = true;
+                else if (hitbox.userData.type === 'shop') intersectingShop = true;
+            }
+        }
+        
+        // Logic for Social Panel
+        if(intersectingSocial && !isSocialOpen) socialPanel.classList.add('visible');
+        else if (!intersectingSocial && isSocialOpen) socialPanel.classList.remove('visible');
+
+        // NEW Logic for Shop Panel
+        if (intersectingShop) {
+            if (canOpenShopPanel && !isShopOpen) {
+                setShopUIVisibility(true);
+                const activeTab = document.querySelector('.tab-button.active');
+                updateShopCategory(activeTab ? activeTab.textContent : Object.keys(productCategories)[0]);
+            }
+        } else {
+            // Player is outside the hitbox
+            if (isShopOpen) {
+                setShopUIVisibility(false);
+            }
+            // Reset the ability to open the panel, so it opens on next entry
+            canOpenShopPanel = true;
+        }
+
+        targetMaxDistance = intersectingShop ? 15 : 30; 
+    }
+
+    function animate() {
+        requestAnimationFrame(animate); const deltaTime = clock.getDelta(), elapsedTime = clock.getElapsedTime();
+        animatedGroups.forEach(group => {
+            group.userData.geometryMesh.rotation.y += 0.005; group.userData.geometryMesh.rotation.x += 0.003;
+            group.userData.icons.forEach(icon => {
+                const data = icon.userData;
+                const time = elapsedTime * data.speed + data.offset;
+                icon.position.set(Math.cos(time) * data.orbitRadius, Math.sin(time * 2) * 2.5, Math.sin(time) * data.orbitRadius);
+                icon.rotation.x = time * 0.5;
+                icon.rotation.y = time * 0.3;
+            });
+        });
+        hitboxMarkers.forEach(marker => { marker.material.opacity = Math.sin(elapsedTime * 4) * 0.2 + 0.4; });
+        updatePlayer(); updateInteractions();
+        if (player) {
+            const targetPosition = player.position.clone().add(new THREE.Vector3(0, 2, 0));
+            controls.target.lerp(targetPosition, 0.1);
+            const p = player.position;
+            document.getElementById('coordinates-ui').innerText = `Position: X:${p.x.toFixed(1)} Y:${p.y.toFixed(1)} Z:${p.z.toFixed(1)}`;
+        }
+        controls.maxDistance = THREE.MathUtils.lerp(controls.maxDistance, targetMaxDistance, 0.05);
+        controls.update();
+        renderer.render(scene, camera);
+
+        if (previewRenderer && document.getElementById('shop-ui').classList.contains('visible')) {
+            previewControls.update();
+            previewRenderer.render(previewScene, previewCamera);
+        }
+    }
+    init();
+  </script>
+</body>
+</html>
+
