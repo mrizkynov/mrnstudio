@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>3D Interactive World</title>
+  <title>3D Interactive World with Physics</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,7 +45,7 @@
         position: fixed;
         top: 25px;
         right: 25px;
-        z-index: 201; /* Higher than the shop panel */
+        z-index: 201; /* Higher than other panels */
         width: 40px;
         height: 40px;
         background: rgba(0,0,0,0.4);
@@ -73,24 +73,63 @@
         transform: scale(1);
     }
 
-    .mini-panel {
-      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-      background: rgba(255, 255, 255, 0.9); padding: 15px 25px; border-radius: 10px;
-      border: 1px solid #e0e0e0; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex;
-      gap: 20px; z-index: 102; opacity: 0; visibility: hidden;
-      transition: opacity 0.4s, visibility 0.4s; align-items: center;
+    .view-button {
+        position: fixed;
+        top: 25px;
+        z-index: 201;
+        width: 40px;
+        height: 40px;
+        color: white;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 50%;
+        cursor: pointer;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: all 0.4s;
+        transform: scale(0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
-    .mini-panel.visible { opacity: 1; visibility: visible; }
-    .icon {
-      font-size: 28px; cursor: pointer; transition: transform 0.2s, filter 0.3s, opacity 0.3s;
-      filter: grayscale(1); opacity: 0.7;
+     #link-view-button {
+        right: 75px;
+        background: rgba(255, 87, 34, 0.8);
+     }
+     #video-view-button {
+        right: 125px; 
+        background: rgba(255, 193, 7, 0.8);
     }
-    .icon:hover { transform: scale(1.2) rotate(5deg); filter: grayscale(0); opacity: 1; }
+    #gallery-view-button {
+        right: 175px;
+        background: rgba(76, 175, 80, 0.8);
+    }
+    #model-view-button {
+        right: 225px;
+        background: rgba(33, 150, 243, 0.8);
+    }
+    #info-view-button {
+        right: 275px;
+        background: rgba(156, 39, 176, 0.8);
+    }
+
+    #link-view-button:hover { background: rgba(255, 87, 34, 1); transform: scale(1.1); }
+    #video-view-button:hover { background: rgba(255, 193, 7, 1); transform: scale(1.1); }
+    #gallery-view-button:hover { background: rgba(76, 175, 80, 1); transform: scale(1.1); }
+    #model-view-button:hover { background: rgba(33, 150, 243, 1); transform: scale(1.1); }
+    #info-view-button:hover { background: rgba(156, 39, 176, 1); transform: scale(1.1); }
     
-    #mobile-close-btn {
-        display: none; position: absolute; top: 10px; right: 10px; width: 30px; height: 30px;
-        background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%;
-        font-size: 18px; line-height: 30px; text-align: center; cursor: pointer; z-index: 103;
+    .view-button.visible {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: scale(1);
+    }
+    .view-button svg {
+        width: 24px;
+        height: 24px;
+        stroke: white;
+        fill: none;
     }
 
     #shop-ui {
@@ -116,6 +155,7 @@
         background: rgba(10, 10, 20, 0.1);
         backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         z-index: -2; border-radius: 15px;
+        transition: background-color: 0.4s;
     }
     #shop-ui.visible { transform: translate(-50%, -50%) scale(1); opacity: 1; visibility: visible; }
     
@@ -161,6 +201,70 @@
     
     #item-details { background: rgba(0, 0, 0, 0.2); border-radius: 10px; position: relative; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.2); }
     
+    /* --- MODULAR PANEL STYLES --- */
+    #item-details > div {
+        display: none; /* Hide all content containers by default */
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+    }
+    #item-details > div.active {
+        display: block; /* Show only the active one */
+    }
+    #preview-container {
+      position: relative; /* Needed for slider nav positioning */
+    }
+    #video-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 10px;
+    }
+    #info-container, #link-container {
+        padding: 25px;
+        overflow-y: auto;
+        color: #fff;
+        line-height: 1.7;
+    }
+    #info-container::-webkit-scrollbar, #link-container::-webkit-scrollbar { width: 6px; }
+    #info-container::-webkit-scrollbar-track, #link-container::-webkit-scrollbar-track { background: transparent; }
+    #info-container::-webkit-scrollbar-thumb, #link-container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.5); border-radius: 3px; }
+    
+    .link-section { margin-bottom: 25px; }
+    .link-section:last-child { margin-bottom: 0; }
+    .link-section h3 { margin: 0 0 15px 0; font-weight: 600; font-size: 16px; color: rgba(255,255,255,0.9); }
+    .link-grid { display: flex; flex-wrap: wrap; gap: 20px; }
+    .link-item a { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: rgba(255,255,255,0.8); transition: transform 0.2s, color 0.2s; }
+    .link-item a:hover { transform: scale(1.1); color: white; }
+    .link-item-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-bottom: 8px; background: #fff; }
+    .link-item-icon svg { width: 28px; height: 28px; fill: white; stroke: none; }
+    .link-item-label { font-size: 12px; font-weight: 500; }
+
+    #gallery-container {
+        padding: 15px;
+        overflow-y: auto;
+        column-count: 2;
+        column-gap: 10px;
+    }
+     #gallery-container::-webkit-scrollbar { width: 6px; }
+    #gallery-container::-webkit-scrollbar-track { background: transparent; }
+    #gallery-container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.5); border-radius: 3px; }
+
+    .gallery-item {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.2s, filter 0.2s;
+        margin-bottom: 10px;
+        display: block; /* Fix for column-break */
+        break-inside: avoid;
+    }
+    .gallery-item:hover {
+        transform: scale(1.03);
+        filter: brightness(1.1);
+    }
+
     .slider-nav { display: flex; align-items: center; justify-content: center; gap: 15px; position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); z-index: 10; }
     .nav-arrow {
         background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.3); color: #fff;
@@ -172,7 +276,94 @@
     .dot { width: 8px; height: 8px; background-color: rgba(255, 255, 255, 0.4); border-radius: 50%; transition: background-color: 0.3s; }
     .dot.active { background-color: #fff; }
     
+    #fullscreen-viewer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s, visibility 0.3s;
+        cursor: pointer;
+    }
+    #fullscreen-viewer.visible {
+        opacity: 1;
+        visibility: visible;
+    }
+    #fullscreen-image {
+        max-width: 90%;
+        max-height: 80%;
+        object-fit: contain;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        cursor: default;
+    }
+
+    #apply-3d-button {
+        background: rgba(33, 150, 243, 0.8);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 8px;
+        padding: 10px 20px;
+        margin-top: 20px;
+        cursor: pointer;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: none; /* Hidden by default */
+    }
+    #apply-3d-button:hover {
+        background: rgba(33, 150, 243, 1);
+        transform: scale(1.05);
+    }
+    
+    .loader {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 4px solid #fff;
+        width: 40px;
+        height: 40px;
+        -webkit-animation: spin 1s linear infinite;
+        animation: spin 1s linear infinite;
+        transform: translate(-50%, -50%);
+        z-index: 15;
+    }
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: translate(-50%, -50%) rotate(0deg); }
+      100% { -webkit-transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
     @media (max-width: 768px) {
+        .view-button {
+            top: auto;
+            bottom: 20px;
+        }
+        #external-close-button {
+            top: 15px;
+            right: 15px;
+        }
+        #link-view-button { left: 20px; right: auto; }
+        #video-view-button { left: 70px; right: auto; }
+        #gallery-view-button { left: 120px; right: auto; }
+        #model-view-button { left: 170px; right: auto; }
+        #info-view-button { left: 220px; right: auto; }
+        
         #shop-ui {
             width: 100vw;
             height: 90vh; /* Adjusted for better fit */
@@ -206,34 +397,48 @@
             flex-grow: 1;
             min-height: 250px; /* Generous min-height for preview */
         }
+        #gallery-container {
+            column-count: 2;
+        }
     }
   </style>
   
   <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
   <script type="importmap">
-    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@v0.163.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.163.0/examples/jsm/" } }
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/" } }
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.min.js"></script>
+  <!-- Added Cannon.js for physics -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 </head>
 <body>
   <div id="instructions-ui">
-    <h2>SELAMAT DATANG</h2>
-    <p>Gunakan <b>W/A/S/D</b> atau <b>ANALOG</b> Untuk menggerakan.</p>
-    <p>EXPLORE MODE MRNSTUDIO</p>
-    <button id="start-button">MULAI!</button>
+    <h2>Welcome!</h2>
+    <p>Use <b>W/A/S/D</b> or the <b>ARROW KEYS</b> to move.</p>
+    <p>Fly into the glowing zones to see more options.</p>
+    <p>Some objects now have physics! Try bumping into them.</p>
+    <button id="start-button">BEGIN</button>
   </div>
 
   <div id="joystick-zone"></div>
-  <div id="coordinates-ui">Position: X:0 Y:0 Z:0</div>
-
-  <div id="social-panel" class="mini-panel">
-      <div class="icon" title="Facebook">📘</div> 
-      <div class="icon" title="Instagram">📸</div> 
-      <div class="icon" title="TikTok">🎵</div>
-      <button id="mobile-close-btn">X</button>
-  </div>
+  <div id="coordinates-ui">Posisi: X:0 Y:0 Z:0</div>
   
-  <button id="external-close-button">×</button>
+  <button id="external-close-button">✕</button>
+  <button id="link-view-button" class="view-button">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path></svg>
+  </button>
+  <button id="video-view-button" class="view-button">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z"></path></svg>
+  </button>
+  <button id="gallery-view-button" class="view-button">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
+  </button>
+  <button id="model-view-button" class="view-button">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.466 7.5C15.643 4.237 13.952 2 12 2 9.239 2 7 6.477 7 12s2.239 10 5 10c.342 0 .677-.069 1-.2"/><path d="m10.5 14.5 1.5 2 1.5-2"/><path d="M20.5 13.5c0-1.886-1.332-4-4.5-4-2.025 0-3.473 1.053-4.23 2.44"/></svg>
+  </button>
+  <button id="info-view-button" class="view-button">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+  </button>
 
   <div id="shop-ui">
       <div id="shop-ui-background"></div>
@@ -245,14 +450,32 @@
               <!-- Items will be populated dynamically -->
           </div>
           <div id="item-details">
-               <div class="slider-nav">
-                  <button class="nav-arrow prev">&lt;</button>
-                  <div class="dots"></div>
-                  <button class="nav-arrow next">&gt;</button>
+              <!-- Container for the 3D model preview -->
+              <div id="preview-container">
+                  <div id="loader" class="loader" style="display: none;"></div>
+                  <div class="slider-nav">
+                      <button class="nav-arrow prev">&lt;</button>
+                      <div class="dots"></div>
+                      <button class="nav-arrow next">&gt;</button>
+                  </div>
+              </div>
+              <!-- Container for video content -->
+              <div id="video-container"></div>
+              <!-- Container for informational text -->
+              <div id="info-container"></div>
+               <!-- Container for link content -->
+              <div id="link-container"></div>
+              <!-- Container for gallery -->
+              <div id="gallery-container">
+                  <!-- Gallery grid will be populated by JS -->
               </div>
           </div>
       </div>
-      <!-- Footer has been removed -->
+  </div>
+  
+  <div id="fullscreen-viewer">
+      <img id="fullscreen-image" src="" alt="Fullscreen Image">
+      <button id="apply-3d-button">Apply 3D Model</button>
   </div>
 
   <script type="module">
@@ -265,10 +488,22 @@
     const move = { forward: 0, backward: 0, left: 0, right: 0 };
     const hitboxes = [], hitboxMarkers = [], animatedGroups = [], mixers = [];
     let playerBox = new THREE.Box3(), controls;
-    let targetMaxDistance = 30;
-    const dayColors = { bg: new THREE.Color(0xf0f0f0), ambient: new THREE.Color(0xffffff), directional: new THREE.Color(0xffe4b4), ground: new THREE.Color(0xffffff) };
+    let targetMaxDistance = 15;
+    const dayColors = { bg: new THREE.Color(0xE6D8B3), ambient: new THREE.Color(0xffffff), directional: new THREE.Color(0xffe4b4), ground: new THREE.Color(0xffffff) };
     const scene = new THREE.Scene(), renderer = new THREE.WebGLRenderer({ antialias: true }), camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000), clock = new THREE.Clock();
     const gltfLoader = new GLTFLoader();
+    const textureLoader = new THREE.TextureLoader();
+    
+    // --- Physics Variables ---
+    let world; // Cannon.js physics world
+    let playerBody; // NEW: Physics body for the player
+    const physicsObjects = []; // Stores { mesh, body } for physics-driven objects
+    const floatingObjects = []; // Stores meshes for floating animation
+    const hitboxHelpers = new Map(); // NEW: Stores visual hitbox helpers
+    // NEW: Define materials for physics interactions
+    let groundMaterial;
+    let objectMaterial;
+
 
     // --- Preview Scene Variables ---
     let previewScene, previewCamera, previewRenderer, previewControls, previewModelGroup;
@@ -276,27 +511,150 @@
     
     // --- Interaction State ---
     let canOpenShopPanel = true;
-    
+    let activePanelType = null;
+    let activeLinkType = null;
+    let currentItemData = null;
+    let currentViewMode = 'model';
+    let currentMergedCollection = {}; // Holds the combined assets for the current item
+    let currentSliderData = { keys: [] }; // Holds data specific to the current slider setup
+    const interactiveScreens = [];
+
     // --- SVG Icons ---
     const svgIcons = {
-        outerwear: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21V19C16 16.7909 14.2091 15 12 15V15C9.79086 15 8 16.7909 8 19V21"></path><path d="M12 15V3L19 5V12L12 15L5 12V5L12 3Z"></path></svg>`,
-        innerwear: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v5.25a2 2 0 002 2h8a2 2 0 002-2V3"></path><path d="M18 21H6a2 2 0 01-2-2V10.25h16V19a2 2 0 01-2 2z"></path></svg>`,
-        legwear: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v20M16 2v20M8 2h8a2 2 0 012 2v2a2 2 0 01-2 2h-3m-2 0H6a2 2 0 01-2-2V4a2 2 0 012-2h2"></path></svg>`,
-        shoes: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l4.48-2.36a2 2 0 011.04 0L15 17.5V13a2 2 0 012-2h3v5a2 2 0 01-2 2h-1.5"></path><path d="M4.5 21a2 2 0 002 2h11a2 2 0 002-2v-2"></path><path d="M7 13.5c-1.33 1-2 2.5-2 4.5"></path></svg>`
+        outerwear: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21V19C16 16.7909 14.2091 15 12 15V15C9.79086 15 8 16.7909 8 19V21"></path><path d="M12 15V3L19 5V12L12 15L5 12V5L12 3Z"></path></svg>`,
+        info: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>`,
+        video: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" /></svg>`,
+        link: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path></svg>`,
+        cart: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>`,
+        store: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5V21h18V9.5z"/><path d="M21 8.5l-2-5H5l-2 5"/><path d="M12 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>`,
+        web: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`,
+        embed: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>`,
+        whatsapp: `<svg viewBox="0 0 24 24"><path d="M16.75,13.96C17,14.09,17.16,14.16,17.21,14.26C17.27,14.37,17.25,14.87,17,15.44C16.8,16,15.76,16.5,15.29,16.56C14.82,16.62,14.38,16.66,12.7,16C11.02,15.33,9.73,14.22,8.84,13.07C7.95,11.92,7.34,10.65,7.33,10.5C7.32,10.36,7.15,10.21,6.91,9.97C6.67,9.73,6.56,9.62,6.44,9.46C6.32,9.3,6.22,9.15,6.13,9C6.04,8.85,5.96,8.73,5.9,8.61C5.86,8.54,5.82,8.47,5.77,8.4C5.67,8.26,5.56,8.12,5.46,8C5.28,7.77,5.02,7.6,4.8,7.57C4.58,7.55,4.32,7.5,4.11,7.5C3.91,7.5,3.72,7.5,3.54,7.54C3.36,7.58,3.09,7.66,2.91,7.84C2.73,8.02,2.5,8.35,2.5,9.08C2.5,9.81,2.89,10.5,3,10.69C3.13,10.89,3.54,11.59,4.24,12.4C4.94,13.21,5.57,13.88,6,14.22C6.41,14.56,6.77,14.82,7.17,15.03C7.57,15.24,7.94,15.35,8.24,15.45C8.6,15.58,9.26,15.76,9.89,15.73C10.52,15.69,11.39,15.21,11.93,14.62C12.48,14.03,12.87,13.27,13.02,13.02C13.17,12.77,13.34,12.76,13.56,12.76C13.78,12.76,13.95,12.76,14.11,12.76C14.27,12.76,14.44,12.78,14.63,12.98C14.82,13.18,15.03,13.44,15.17,13.56C15.31,13.68,15.44,13.76,15.6,13.84C15.76,13.92,16.22,14.15,16.75,13.96M12,2A10,10,0,0,1,22,12A10,10,0,0,1,12,22C10.89,22,9.8,21.76,8.84,21.32L4,22.5L5.18,17.69C4.24,16.14,3.77,14.39,3.8,12.5C3.8,7.27,7.46,2.9,12.8,2.86C17.5,2.83,21.5,6.83,22,11.53C22,11.67,22,11.83,22,12M12,4C7.57,4,4,7.57,4,12C4,13.85,4.5,15.55,5.36,16.96L4.5,20.5L8.04,19.64C9.45,20.5,11.15,21,12,21A8,8,0,0,0,20,13A8,8,0,0,0,12,5V4Z"/></svg>`,
+        facebook: `<svg viewBox="0 0 24 24"><path d="M17,2V2H17V6H15C14.31,6 14,6.81 14,7.5V10H17L16,14H14V22H10V14H7V10H10V6A4,4 0 0,1 14,2H17Z"/></svg>`,
+        x: `<svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>`,
+        email: `<svg viewBox="0 0 24 24"><path d="M22 6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6M20 6L12 11L4 6H20M20 18H4V8L12 13L20 8V18Z"/></svg>`
     };
 
-    // --- MODULAR DATA CONFIG ---
-    const objectModels = {
-        padvyModel: { path: 'https://cdn.glitch.global/e84a1d47-76a1-4549-9133-c534c752c42c/padvy3d.glb?v=1697288607834' },
-        clothmodel: { path: './clothmodel.glb' },
-        mrn: { path: 'https://cdn.glitch.global/e84a1d47-76a1-4549-9133-c534c752c42c/mrn.glb?v=1697288623049' },
-        search: { path: 'https://cdn.glitch.global/e84a1d47-76a1-4549-9133-c534c752c42c/mrn.glb?v=1697288fe23049' },
+    const linkData = {
+        share: [
+            { name: 'Embed', icon: 'embed', url: '#' },
+            { name: 'WhatsApp', icon: 'whatsapp', url: 'https://wa.me/?text=Check%20this%20out!', color: '#25D366' },
+            { name: 'Facebook', icon: 'facebook', url: 'https://www.facebook.com/sharer/sharer.php?u=', color: '#1877F2' },
+            { name: 'X', icon: 'x', url: 'https://twitter.com/intent/tweet?text=Check%20this%20out!', color: '#000000' },
+            { name: 'Email', icon: 'email', url: 'mailto:?subject=Check%20this%20out', color: '#888888' }
+        ],
+        padvy: [
+            { name: 'Shopee', icon: 'cart', url: '#' },
+            { name: 'Tokopedia', icon: 'store', url: '#' }
+        ],
+        mrn: [
+             { name: 'Website', icon: 'web', url: '#' }
+        ],
+        invonite: [
+            { name: 'Website', icon: 'web', url: '#' }
+        ],
+        social: [
+            { name: 'Facebook', icon: 'facebook', url: 'https://facebook.com', color: '#1877F2' },
+            { name: 'X', icon: 'x', url: 'https://twitter.com', color: '#000000' },
+            { name: 'WhatsApp', icon: 'whatsapp', url: 'https://whatsapp.com', color: '#25D366' }
+        ]
+    };
+
+    // --- RESTRUCTURED: More flexible data structure ---
+    const assetCollections = {
+        padvyCollection: { 
+            linkType: 'padvy',
+            defaultView: 'model',
+            defaultModelIndex: 0,
+            paths: [
+                './mrn.glb',
+                './search.glb',
+                './padvy3d.glb',
+                './clothmodel.glb'
+            ], 
+            videos: [
+                "https://www.youtube.com/embed/Scg-A5pBAe8?autoplay=1&mute=1&loop=1&playlist=Scg-A5pBAe8"
+            ],
+            images: [
+                { src: 'https://placehold.co/600x800/333/fff?text=Padvy+Style+1', modelIndex: 0 },
+                { src: 'https://placehold.co/600x400/555/fff?text=Padvy+Style+2', modelIndex: 1 },
+                { src: 'https://placehold.co/600x600/777/fff?text=Padvy+Style+3', modelIndex: 2 },
+                { src: 'https://placehold.co/600x900/444/fff?text=Padvy+Style+4', modelIndex: 3 }
+            ],
+            info: "<h2>About PADVY</h2><p>PADVY menghadirkan identitas gaya melalui produk kreatif berkualitas.</p>"
+        },
+        mrnCollection: {
+             linkType: 'mrn',
+             defaultView: 'model',
+             defaultModelIndex: 0,
+             paths: [
+                './padvy3d.glb',
+                './clothmodel.glb',
+                './mrn.glb',
+                './search.glb'
+             ],
+           images: [
+                { src: 'https://placehold.co/600x800/111/fff?text=MRN+1', modelIndex: 0 },
+                { src: 'https://placehold.co/600x500/222/fff?text=MRN+2', modelIndex: 1 }
+            ],
+            info: "<h2>About MRN Studio</h2><p>MRN Studio, penyedia layanan pengembangan digital interaktif untuk memenuhi kebutuhan pengembang dan kreator.</p>"
+        },
+        invicollection: {
+            linkType: 'invonite',
+            defaultView: 'video',
+            info: "<h2>INVI</h2><p>INVI adalah game virtual yang tersedia di Roblox, tempat kamu bisa ngobrol, seru-seruan, dan menjelajahi INVI Island bareng pemain lain!, Nikmati berbagai fitur menarik dan event seru yang selalu hadir untuk menambah keseruan di dunia INVI.</p>",
+            videos: [
+               "https://www.youtube.com/embed/Scg-A5pBAe8?autoplay=1&mute=1&loop=1&playlist=Scg-A5pBAe8"
+            ]
+        },
+        galleryInfoOnlyCollection: {
+            defaultView: 'info',
+            info: "<h2>Koleksi Galeri & Info</h2><p>Ini adalah contoh konten yang hanya menampilkan galeri gambar dan halaman informasi. Tidak ada pratinjau 3D yang akan ditampilkan untuk item ini.</p>",
+            images: [ 
+                { src: 'https://placehold.co/600x700/2ECC71/ffffff?text=Gambar+Info+1' },
+                { src: 'https://placehold.co/600x500/27AE60/ffffff?text=Gambar+Info+2' }
+            ]
+        },
+        // --- NEW: Added a collection for the Social zone ---
+        socialCollection: {
+            linkType: 'social',
+            defaultView: 'link',
+            info: "<h2>Connect With Us</h2><p>Follow us on our social media channels to stay updated!</p>",
+        },
+        // --- Static GLBs without collections ---
+        carModel: { paths: ['./mrn.glb'] },
+        ufoModel: { paths: ['https://cdn.glitch.global/e84a1d47-76a1-4549-9133-c534c752c42c/ufo.glb?v=1700236329819'] },
     };
     
-    const productCategories = {
-        "LIFESTYLE": [
-            { name: "KAOS", icon: "innerwear", models: ["clothmodel"] },
-        ]
+    const panelData = {
+        'padvy': {
+            "LIFESTYLE": [
+                { name: "T-SHIRTS (Combined)", icon: "outerwear", type: 'collection', assetKeys: ["padvyCollection", "mrnCollection"] },
+                { name: "HOODIE", icon: "outerwear", type: 'collection', assetKeys: ["mrnCollection"] }
+            ],
+        },
+        'mrn': {
+            "INFO": [
+                 { name: "MRN", icon: "info", type: 'info', info: "<h2>MRN Studio</h2><p>Penyedia layanan pengembangan digital interaktif untuk memenuhi kebutuhan pengembang dan kreator.</p>" },
+                { name: "INVONITE", icon: "info", type: 'info', info: "<h2>Invonite</h2><p>Menghadirkan solusi digital inovatif untuk pengembang dan kreator interaktif.</p>" },
+                { name: "PADVY", icon: "info", type: 'info', info: "<h2>PADVY</h2><p>Menghadirkan identitas gaya melalui produk kreatif berkualitas.</p>" }
+            ],
+            "JASA & LAYANAN": [
+                { name: "UI/UX", icon: "info", type: 'collection', assetKeys: ["mrnCollection"] },
+                { name: "Galeri & Info", icon: "info", type: 'collection', assetKeys: ["galleryInfoOnlyCollection"] }
+            ]
+        },
+        'invonite': {
+            "OFFICIAL GAMES": [
+                { name: "INVI", icon: "info", type: 'collection', assetKeys: ["invicollection"] },
+            ]
+        },
+        // --- NEW: Added panel data for the Social zone ---
+        'social': {
+            "CONNECT": [
+                { name: "Social Links", icon: "web", type: 'collection', assetKeys: ["socialCollection"] },
+            ]
+        }
     };
 
     const orbitingObjectsData = [{ 
@@ -304,13 +662,70 @@
         position: new THREE.Vector3(0, 7, 0), 
         centralObject: { type: 'icosahedron', scale: new THREE.Vector3(4, 4, 4) }, 
         orbitingIcons: [
-            { type: 'mesh', geometry: 'Torus', args: [0.8, 0.15, 16, 100], orbitRadius: 12, speed: 0.15, offset: 0 },
-            { type: 'mesh', geometry: 'Box', args: [1, 1, 1], orbitRadius: 12, speed: -0.12, offset: Math.PI * 2 / 3 },
-            { type: 'mesh', geometry: 'Icosahedron', args: [0.9, 0], orbitRadius: 12, speed: 0.1, offset: Math.PI * 4 / 3 },
+            { type: 'model', assetKey: 'mrnCollection' , orbitRadius: 12, speed: -0.12, offset: Math.PI * 2 / 3 },
+            { type: 'model', assetKey: 'padvyCollection', orbitRadius: 12, speed: 0.1, offset: Math.PI * 4 / 3 },
         ]
     }];
 
-    const hitboxData = [{ type: 'social', position: new THREE.Vector3(-35.6, 3.5, -45), size: new THREE.Vector3(8, 8, 8), markerColor: 0x00aaff },{ type: 'shop', position: new THREE.Vector3(-25.9, 3.5, -22.1), size: new THREE.Vector3(8, 8, 8), markerColor: 0xff44aa },];
+    const staticObjectsData = [
+        { 
+            modelKey: 'mrnCollection', 
+            type: 'float', 
+            position: new THREE.Vector3(-15, 8, -10), 
+            scale: new THREE.Vector3(5, 5, 5), 
+            rotation: new THREE.Euler(0, 0, 0) 
+        },
+        { 
+            type: 'physics', shape: 'box', position: new THREE.Vector3(10, 20, -5), 
+            size: new THREE.Vector3(3, 3, 3), color: 0xaa44ff, physics: { mass: 150 }
+        },
+        { 
+            type: 'physics', shape: 'box', position: new THREE.Vector3(15, 15, 0),
+            size: new THREE.Vector3(2, 2, 2), color: 0x44ffaa, physics: { mass: 20 }
+        },
+        { 
+            type: 'physics', shape: 'sphere', position: new THREE.Vector3(5, 25, 5),
+            size: new THREE.Vector3(2, 2, 2), color: 0xff6347, physics: { mass: 40 }
+        },
+        { 
+            type: 'physics', shape: 'tetrahedron', position: new THREE.Vector3(20, 30, -10),
+            size: new THREE.Vector3(2.5, 2.5, 2.5), color: 0x4682b4, physics: { mass: 30 }
+        },
+        {
+            type: 'physics', shape: 'box', position: new THREE.Vector3(60, 5, -40),
+            size: new THREE.Vector3(8, 10, 12), color: 0xaaaaaa, physics: { mass: 0 } 
+        },
+        {
+            type: 'physics', modelKey: 'carModel', position: new THREE.Vector3(-70, 1.5, 30),
+            rotation: new THREE.Euler(0, Math.PI / 2, 0), scale: new THREE.Vector3(6, 6, 6),
+            physics: { mass: 0, shape: 'box', hitboxSize: new THREE.Vector3(4, 3, 8) }
+        },
+        { 
+            type: 'physics', shape: 'box', position: new THREE.Vector3(-20, 12.5, 55),
+            size: new THREE.Vector3(10, 25, 10), color: 0x888899, physics: { mass: 0 }
+        },
+        { 
+            type: 'physics', shape: 'box', position: new THREE.Vector3(80, 2, 20),
+            size: new THREE.Vector3(8, 4, 6), color: 0x999999, physics: { mass: 0 }
+        },
+        { 
+            type: 'physics', modelKey: 'carModel', position: new THREE.Vector3(10, 0, 60),
+            scale: new THREE.Vector3(8, 8, 8),
+            physics: { mass: 0, shape: 'box', hitboxSize: new THREE.Vector3(3, 4, 6) }
+        },
+        { 
+            type: 'physics', shape: 'box', position: new THREE.Vector3(-80, 15, -15),
+            size: new THREE.Vector3(15, 30, 20), color: 0x778899, physics: { mass: 0 }
+        }
+    ];
+
+    const hitboxData = [
+        { type: 'padvy', position: new THREE.Vector3(-25.9, 3.5, -22.1), size: new THREE.Vector3(8, 8, 8), markerColor: 0xff44aa, panelColor: 'rgba(255, 192, 203, 0.2)' },
+        { type: 'mrn', position: new THREE.Vector3(0, 3.5, -35), size: new THREE.Vector3(8, 8, 8), markerColor: 0x44ffaa, panelColor: 'rgba(152, 251, 152, 0.2)' },
+        { type: 'invonite', position: new THREE.Vector3(25.9, 3.5, -22.1), size: new THREE.Vector3(8, 8, 8), markerColor: 0xaa44ff, panelColor: 'rgba(230, 230, 250, 0.2)' },
+        // --- NEW: Added hitbox data for the Social zone ---
+        { type: 'social', position: new THREE.Vector3(0, 3.5, 35), size: new THREE.Vector3(8, 8, 8), markerColor: 0x1DA1F2, panelColor: 'rgba(29, 161, 242, 0.2)' },
+    ];
         
     function init() {
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -318,35 +733,60 @@
         renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
         scene.background = dayColors.bg;
+        scene.fog = new THREE.Fog(dayColors.bg, 50, 250);
         controls = new OrbitControls(camera, renderer.domElement);
         controls.enabled = true; controls.enableDamping = true; controls.dampingFactor = 0.05;
         controls.screenSpacePanning = false; controls.maxPolarAngle = Math.PI / 2 - 0.1;
-        controls.minDistance = 5; controls.maxDistance = 30;
+        controls.minDistance = 5; controls.maxDistance = 15;
         scene.add(new THREE.AmbientLight(dayColors.ambient, 1.5));
         const directionalLight = new THREE.DirectionalLight(dayColors.directional, 2.5);
         directionalLight.position.set(20, 40, 10); directionalLight.castShadow = true;
         scene.add(directionalLight);
-        createPlayer(); createHitboxesAndMarkers();
+
+        initPhysics();
+        createPlayer(); 
+        createHitboxesAndMarkers();
+        createStaticObjects(); 
         orbitingObjectsData.forEach(createOrbitingObjectGroup);
-        const platform = new THREE.Mesh(...Object.values(createFloatingPlatform()));
-        platform.position.y = -2; platform.receiveShadow = true;
-        scene.add(platform);
-        camera.position.set(0, 10, 25);
+
+        loadPlatformModel();
+        
+        camera.position.set(0, 8, 15);
         initPreviewScene();
         setupEventListeners();
         if ('ontouchstart' in window) {
             document.getElementById('joystick-zone').style.display = 'block';
             setupJoystick();
         }
-        buildTabs();
-        updateShopCategory(Object.keys(productCategories)[0]);
         animate();
     }
+
+    function initPhysics() {
+        world = new CANNON.World();
+        world.gravity.set(0, -9.82, 0);
+        world.broadphase = new CANNON.NaiveBroadphase();
+        world.solver.iterations = 15;
+        world.allowSleep = true;
+        
+        groundMaterial = new CANNON.Material('ground');
+        objectMaterial = new CANNON.Material('object');
+        
+        const groundObjectContactMaterial = new CANNON.ContactMaterial(groundMaterial, objectMaterial, {
+            friction: 0.4,
+            restitution: 0.1 
+        });
+        world.addContactMaterial(groundObjectContactMaterial);
+    }
     
-    function buildTabs() {
+    function buildTabs(panelType) {
+        const panelCategories = panelData[panelType];
+        if (!panelCategories) return;
+        
         const header = document.querySelector('.shop-header');
         header.innerHTML = '';
-        Object.keys(productCategories).forEach((key, index) => {
+        const categoryKeys = Object.keys(panelCategories);
+
+        categoryKeys.forEach((key, index) => {
             const tab = document.createElement('div');
             tab.className = 'tab-button';
             if (index === 0) tab.classList.add('active');
@@ -355,20 +795,29 @@
                 if (tab.classList.contains('active')) return;
                 document.querySelector('.tab-button.active').classList.remove('active');
                 tab.classList.add('active');
-                updateShopCategory(key);
+                updateShopCategory(panelType, key);
             });
             header.appendChild(tab);
         });
+
+        if (categoryKeys.length > 0) {
+            updateShopCategory(panelType, categoryKeys[0]);
+        } else {
+            updateShopCategory(null, null);
+        }
     }
 
     function initPreviewScene() {
-        const container = document.getElementById('item-details');
+        const container = document.getElementById('preview-container'); 
         previewScene = new THREE.Scene();
-        const rect = container.getBoundingClientRect();
-        previewCamera = new THREE.PerspectiveCamera(50, rect.width / rect.height, 0.1, 100);
+        
+        const initialWidth = 1;
+        const initialHeight = 1;
+
+        previewCamera = new THREE.PerspectiveCamera(50, initialWidth / initialHeight, 0.1, 100);
         previewCamera.position.z = 2.5;
         previewRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        previewRenderer.setSize(rect.width, rect.height);
+        previewRenderer.setSize(initialWidth, initialHeight);
         previewRenderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(previewRenderer.domElement);
         previewControls = new OrbitControls(previewCamera, previewRenderer.domElement);
@@ -383,15 +832,29 @@
         previewScene.add(previewModelGroup);
     }
 
-    function setShopUIVisibility(visible) {
+    function setShopUIVisibility(visible, panelType) {
         const shopPanel = document.getElementById('shop-ui');
         const externalCloseBtn = document.getElementById('external-close-button');
+        const shopBg = document.getElementById('shop-ui-background');
+
         if (visible) {
+            const hitbox = hitboxData.find(h => h.type === panelType);
+            if (hitbox && hitbox.panelColor) {
+                shopBg.style.backgroundColor = hitbox.panelColor;
+            } else {
+                shopBg.style.backgroundColor = 'rgba(10, 10, 20, 0.1)';
+            }
             shopPanel.classList.add('visible');
             externalCloseBtn.classList.add('visible');
+            setTimeout(updatePreviewRendererSize, 50); 
         } else {
             shopPanel.classList.remove('visible');
             externalCloseBtn.classList.remove('visible');
+            document.getElementById('model-view-button').classList.remove('visible');
+            document.getElementById('video-view-button').classList.remove('visible');
+            document.getElementById('gallery-view-button').classList.remove('visible');
+            document.getElementById('info-view-button').classList.remove('visible');
+            document.getElementById('link-view-button').classList.remove('visible');
         }
     }
 
@@ -404,75 +867,213 @@
             document.getElementById('instructions-ui').style.opacity = '0';
             setTimeout(() => { document.getElementById('instructions-ui').style.display = 'none'; }, 500);
         });
-        document.getElementById('mobile-close-btn').addEventListener('click', () => document.getElementById('social-panel').classList.remove('visible'));
         
         document.getElementById('external-close-button').addEventListener('click', () => {
             setShopUIVisibility(false);
             canOpenShopPanel = false;
         });
 
+        renderer.domElement.addEventListener('click', onScreenClick);
+
         document.querySelector('.slider-nav .prev').addEventListener('click', () => navigatePreview(-1));
         document.querySelector('.slider-nav .next').addEventListener('click', () => navigatePreview(1));
+
+        document.getElementById('model-view-button').addEventListener('click', () => switchView('model'));
+        document.getElementById('video-view-button').addEventListener('click', () => switchView('video'));
+        document.getElementById('gallery-view-button').addEventListener('click', () => switchView('gallery'));
+        document.getElementById('info-view-button').addEventListener('click', () => switchView('info'));
+        document.getElementById('link-view-button').addEventListener('click', () => switchView('link'));
+
+
+        document.getElementById('fullscreen-viewer').addEventListener('click', (e) => {
+            if (e.target.id === 'fullscreen-viewer') {
+                document.getElementById('fullscreen-viewer').classList.remove('visible');
+            }
+        });
     }
 
-    function updateShopCategory(categoryKey) {
-        const items = productCategories[categoryKey] || [];
+    function updateShopCategory(panelType, categoryKey) {
         const itemGrid = document.querySelector('.item-grid');
         itemGrid.innerHTML = ''; 
 
+        if (!panelType || !categoryKey) {
+            displayItemDetails({});
+            return;
+        }
+
+        const items = panelData[panelType][categoryKey] || [];
         items.forEach((itemData) => {
             const itemEl = document.createElement('div');
             itemEl.className = 'shop-item';
-            itemEl.innerHTML = `<div class="icon">${svgIcons[itemData.icon]}</div><span>${itemData.name}</span>`;
+            itemEl.innerHTML = `<div class="icon">${svgIcons[itemData.icon] || ''}</div><span>${itemData.name}</span>`;
             itemEl.addEventListener('click', () => {
                 document.querySelector('.shop-item.selected')?.classList.remove('selected');
                 itemEl.classList.add('selected');
-                loadPreviewModelsForItem(itemData.models || []);
+                displayItemDetails(itemData);
             });
             itemGrid.appendChild(itemEl);
         });
         
         if (itemGrid.firstChild) {
-            itemGrid.firstChild.click(); // Automatically click the first item
+            itemGrid.firstChild.click();
         } else {
-             loadPreviewModelsForItem([]); // Clear preview if category is empty
+             displayItemDetails({});
+        }
+    }
+
+    function displayItemDetails(itemData) {
+        currentItemData = itemData;
+
+        if (itemData.type === 'collection') {
+            loadPreviewCollection(itemData.assetKeys);
+        } else {
+            currentMergedCollection = {};
+            currentSliderData = { keys: [] };
+            switchView(itemData.type || 'info');
         }
     }
     
-    function loadPreviewModelsForItem(modelKeys) {
-        while(previewModelGroup.children.length > 0){ 
-            previewModelGroup.remove(previewModelGroup.children[0]); 
-        }
+    function mergeCollections(assetKeys) {
+        const merged = {
+            paths: [],
+            videos: [],
+            images: [],
+            info: "",
+            defaultView: 'model',
+            defaultModelIndex: 0
+        };
 
+        if (!assetKeys || assetKeys.length === 0) return merged;
+
+        const firstCollection = assetCollections[assetKeys[0]] || {};
+        merged.defaultView = firstCollection.defaultView || 'model';
+        merged.defaultModelIndex = firstCollection.defaultModelIndex || 0;
+        
+        let pathOffset = 0;
+
+        assetKeys.forEach(key => {
+            const collection = assetCollections[key];
+            if (!collection) return;
+
+            if (collection.paths) {
+                merged.paths.push(...collection.paths);
+            }
+            if (collection.videos) {
+                merged.videos.push(...collection.videos);
+            }
+            if (collection.info) {
+                merged.info += collection.info;
+            }
+            if (collection.images) {
+                collection.images.forEach(img => {
+                    const newImg = { ...img };
+                    if (newImg.modelIndex !== undefined) {
+                        newImg.modelIndex += pathOffset;
+                    }
+                    merged.images.push(newImg);
+                });
+            }
+            
+            pathOffset += (collection.paths || []).length;
+        });
+
+        return merged;
+    }
+
+    function loadPreviewCollection(assetKeys) {
+        const loader = document.getElementById('loader');
+        loader.style.display = 'block';
+
+        while (previewModelGroup.children.length > 0) {
+            previewModelGroup.remove(previewModelGroup.children[0]);
+        }
         const dotsContainer = document.querySelector('.slider-nav .dots');
         dotsContainer.innerHTML = '';
         
-        if (!modelKeys || modelKeys.length === 0) {
+        currentMergedCollection = mergeCollections(assetKeys);
+        currentSliderData = { keys: [] }; 
+
+        const sliderPaths = [];
+        if (assetKeys && assetKeys.length > 0) {
+            assetKeys.forEach(key => {
+                const collection = assetCollections[key];
+                if (collection) {
+                    currentSliderData.keys.push(key);
+                    if (collection.paths && collection.paths.length > 0) {
+                        const defaultIndex = collection.defaultModelIndex || 0;
+                        sliderPaths.push(collection.paths[defaultIndex]);
+                    } else {
+                        sliderPaths.push(null); 
+                    }
+                }
+            });
+        }
+        
+        const initialModelIndex = 0; 
+        const firstCollectionKey = currentSliderData.keys[0];
+        const firstCollection = firstCollectionKey ? assetCollections[firstCollectionKey] : {};
+        let initialView = firstCollection.defaultView || 'model';
+
+        if (sliderPaths.length === 0) {
+            loader.style.display = 'none';
+            switchView(initialView);
             return;
         }
+        
+        const models = new Array(sliderPaths.length);
+        let modelsToLoad = sliderPaths.length;
 
-        modelKeys.forEach((key, index) => {
-            loadGltfModel(key, (model) => {
-                model.visible = (index === 0);
-                previewModelGroup.add(model);
+        const onAllModelsHandled = () => {
+            models.forEach((m, i) => {
+                const dot = document.createElement('span');
+                dot.classList.add('dot');
+                if (i === initialModelIndex) dot.classList.add('active');
+                dotsContainer.appendChild(dot);
+                if (!m) return;
+                
+                m.visible = (i === initialModelIndex);
+                previewModelGroup.add(m);
             });
-            const dot = document.createElement('span');
-            dot.classList.add('dot');
-            if (index === 0) dot.classList.add('active');
-            dotsContainer.appendChild(dot);
+            
+            currentPreviewIndex = initialModelIndex;
+            const firstModel = models[initialModelIndex];
+            if (!firstModel) {
+                 initialView = firstCollection.defaultView || 'info';
+            }
+            loader.style.display = 'none';
+            switchView(initialView);
+        };
+
+        const onModelFinishedLoading = () => {
+            modelsToLoad--;
+            if (modelsToLoad === 0) {
+                onAllModelsHandled();
+            }
+        };
+
+        sliderPaths.forEach((path, index) => {
+            if (path) {
+                loadAndProcessGltf(path, (model) => {
+                    if(model) model.userData.assetKey = currentSliderData.keys[index];
+                    models[index] = model; 
+                    onModelFinishedLoading();
+                });
+            } else {
+                models[index] = null;
+                onModelFinishedLoading();
+            }
         });
-        currentPreviewIndex = 0;
     }
 
+    function loadGltfModel(assetKey, onComplete) {
+        const collection = assetCollections[assetKey] || {};
+        const path = collection.paths ? collection.paths[collection.defaultModelIndex || 0] : null;
 
-    function loadGltfModel(modelKey, onComplete) {
-        const modelInfo = objectModels[modelKey];
-        if (!modelInfo) {
-            console.warn(`Model key "${modelKey}" not found.`);
+        if (!path) {
             onComplete(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshNormalMaterial()));
             return;
         }
-        gltfLoader.load(modelInfo.path, 
+        gltfLoader.load(path, 
             (gltf) => {
                 const model = gltf.scene;
                 const box = new THREE.Box3().setFromObject(model);
@@ -486,27 +1087,500 @@
             }, 
             undefined, 
             (error) => {
-                console.error(`Error loading GLB for key "${modelKey}":`, error);
+                console.error(`Error loading GLB for key "${assetKey}":`, error);
                 onComplete(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshNormalMaterial()));
             }
         );
     }
+
+    function getCurrentContextForView() {
+        const currentCollectionKey = currentSliderData.keys[currentPreviewIndex];
+        if (currentCollectionKey) {
+            return { key: currentCollectionKey, data: assetCollections[currentCollectionKey] };
+        }
+        if (currentItemData && currentItemData.type === 'collection') {
+            const key = currentItemData.assetKeys && currentItemData.assetKeys.length > 0 ? currentItemData.assetKeys[0] : null;
+            return { key: key, data: assetCollections[key] || currentMergedCollection };
+        }
+        return { key: null, data: currentItemData };
+    }
     
     function navigatePreview(direction) {
-        if (previewModelGroup.children.length === 0) return;
-        const newIndex = (currentPreviewIndex + direction + previewModelGroup.children.length) % previewModelGroup.children.length;
+        if (currentSliderData.keys.length <= 1) return;
+        const newIndex = (currentPreviewIndex + direction + currentSliderData.keys.length) % currentSliderData.keys.length;
         updatePreviewSlide(newIndex);
     }
 
     function updatePreviewSlide(index) {
-        previewModelGroup.children.forEach((child, i) => child.visible = (i === index));
-        document.querySelectorAll('.slider-nav .dot').forEach((dot, i) => dot.classList.toggle('active', i === index));
-        currentPreviewIndex = index;
+        if (index >= 0 && index < currentSliderData.keys.length) {
+            currentPreviewIndex = index;
+            previewModelGroup.children.forEach(child => child.visible = false);
+            
+            const newKey = currentSliderData.keys[index];
+            const modelToShow = previewModelGroup.children.find(c => c.userData.assetKey === newKey);
+            
+            if (modelToShow) {
+                modelToShow.visible = true;
+            }
+
+            document.querySelectorAll('.slider-nav .dot').forEach((dot, i) => dot.classList.toggle('active', i === index));
+            
+            const currentCollection = assetCollections[newKey] || {};
+            const viewToShow = modelToShow ? 'model' : currentCollection.defaultView || 'info';
+
+            switchView(viewToShow);
+        }
+    }
+
+    function switchView(viewType) {
+        currentViewMode = viewType;
+
+        const containers = {
+            model: document.getElementById('preview-container'),
+            video: document.getElementById('video-container'),
+            gallery: document.getElementById('gallery-container'),
+            info: document.getElementById('info-container'),
+            link: document.getElementById('link-container')
+        };
+        Object.values(containers).forEach(c => c.classList.remove('active'));
+        
+        const activeContainer = containers[viewType];
+        
+        if (activeContainer) {
+            activeContainer.classList.add('active');
+
+            const { data: currentCollection } = getCurrentContextForView();
+
+            if (viewType === 'model') {
+                updatePreviewRendererSize(); 
+            } else if (viewType === 'video') {
+                const videoUrl = currentCollection && currentCollection.videos && currentCollection.videos.length > 0 
+                    ? currentCollection.videos[0] 
+                    : (currentItemData.type !== 'collection' ? currentItemData.videoUrl : null);
+                activeContainer.innerHTML = videoUrl 
+                    ? `<iframe src="${videoUrl}" allow="autoplay; encrypted-media" allowfullscreen></iframe>` 
+                    : '<p style="padding: 20px; text-align: center;">No video available for this item.</p>';
+            } else if (viewType === 'gallery') {
+                showGalleryGrid();
+            } else if (viewType === 'info') {
+                const infoContent = (currentCollection ? currentCollection.info : null) || (currentItemData.type !== 'collection' ? currentItemData.info : null) || '<p style="padding: 20px; text-align: center;">No information available for this item.</p>';
+                activeContainer.innerHTML = infoContent;
+            } else if (viewType === 'link') {
+                populateLinkContainer();
+            }
+        }
+        
+        updateViewButtons();
+    }
+
+    function updateViewButtons() {
+        const modelBtn = document.getElementById('model-view-button');
+        const videoBtn = document.getElementById('video-view-button');
+        const galleryBtn = document.getElementById('gallery-view-button');
+        const infoBtn = document.getElementById('info-view-button');
+        const linkBtn = document.getElementById('link-view-button');
+
+        [modelBtn, videoBtn, galleryBtn, infoBtn, linkBtn].forEach(btn => btn.classList.remove('visible'));
+        
+        if (!currentItemData) return;
+
+        const { data: currentCollection } = getCurrentContextForView();
+
+        if (!currentCollection) return;
+
+        const hasModel = currentCollection.paths && currentCollection.paths.length > 0;
+        const hasVideo = (currentCollection.videos && currentCollection.videos.length > 0);
+        const hasGallery = currentCollection.images && currentCollection.images.length > 0;
+        const hasInfo = !!currentCollection.info;
+        const hasLink = !!currentCollection.linkType;
+        
+        if (currentViewMode !== 'model' && hasModel) modelBtn.classList.add('visible');
+        if (currentViewMode !== 'video' && hasVideo) videoBtn.classList.add('visible');
+        if (currentViewMode !== 'gallery' && hasGallery) galleryBtn.classList.add('visible');
+        if (currentViewMode !== 'info' && hasInfo) infoBtn.classList.add('visible');
+        if (currentViewMode !== 'link' && hasLink) linkBtn.classList.add('visible');
+    }
+
+    function getPathOffsetForCollectionKey(targetKey) {
+        if (!currentItemData || !currentItemData.assetKeys) return 0;
+
+        let pathOffset = 0;
+        for (const key of currentItemData.assetKeys) {
+            if (key === targetKey) {
+                return pathOffset;
+            }
+            const collection = assetCollections[key];
+            pathOffset += (collection.paths || []).length;
+        }
+        return 0;
+    }
+
+    function showGalleryGrid() {
+        const galleryContainer = document.getElementById('gallery-container');
+        galleryContainer.innerHTML = '';
+
+        const { key: currentCollectionKey, data: collection } = getCurrentContextForView();
+
+        if (!collection) {
+            galleryContainer.innerHTML = '<p style="padding: 20px; text-align: center;">No gallery for this item.</p>';
+            return;
+        }
+
+        const images = collection.images;
+        const pathOffset = getPathOffsetForCollectionKey(currentCollectionKey);
+
+        if (!images || images.length === 0) {
+            galleryContainer.innerHTML = `<p style="padding: 20px; text-align: center;">No images in this gallery.</p>`;
+            return;
+        }
+
+        images.forEach(imageObj => {
+            const img = document.createElement('img');
+            img.src = imageObj.src;
+            img.alt = "Gallery Image";
+            img.className = 'gallery-item';
+            img.onclick = () => {
+                const viewer = document.getElementById('fullscreen-viewer');
+                const applyBtn = document.getElementById('apply-3d-button');
+                
+                document.getElementById('fullscreen-image').src = imageObj.src;
+                viewer.classList.add('visible');
+                
+                const globalModelIndex = pathOffset + (imageObj.modelIndex || 0);
+                const modelExists = imageObj.modelIndex !== undefined && globalModelIndex < currentMergedCollection.paths.length;
+
+                if (modelExists) {
+                    applyBtn.style.display = 'block';
+                    applyBtn.onclick = (e) => {
+                        e.stopPropagation(); 
+                        setModelFromGallery(globalModelIndex);
+                        viewer.classList.remove('visible');
+                    };
+                } else {
+                    applyBtn.style.display = 'none';
+                }
+            };
+            galleryContainer.appendChild(img);
+        });
+    }
+
+    function findSlideIndexForModel(globalModelIndex) {
+        if (!currentItemData || !currentItemData.assetKeys) return -1;
+        let pathCounter = 0;
+        for (let i = 0; i < currentItemData.assetKeys.length; i++) {
+            const key = currentItemData.assetKeys[i];
+            const collection = assetCollections[key];
+            const collectionPathCount = (collection.paths || []).length;
+
+            if (globalModelIndex >= pathCounter && globalModelIndex < pathCounter + collectionPathCount) {
+                return i;
+            }
+            pathCounter += collectionPathCount;
+        }
+        return -1;
+    }
+
+    function loadAndProcessGltf(path, onComplete) {
+         gltfLoader.load(path, 
+            (gltf) => {
+                const model = gltf.scene;
+                const box = new THREE.Box3().setFromObject(model);
+                const size = box.getSize(new THREE.Vector3());
+                const center = box.getCenter(new THREE.Vector3());
+                const maxSize = Math.max(size.x, size.y, size.z);
+                const scale = 1.5 / maxSize;
+                model.scale.multiplyScalar(scale);
+                model.position.sub(center.multiplyScalar(scale));
+                onComplete(model);
+            }, 
+            undefined, 
+            (error) => {
+                console.error(`Error loading GLB from path "${path}":`, error);
+                onComplete(null);
+            }
+        );
+    }
+
+    function populateLinkContainer() {
+        const container = document.getElementById('link-container');
+        container.innerHTML = '';
+        const { data: currentCollection } = getCurrentContextForView();
+        const type = currentCollection ? currentCollection.linkType : null;
+
+        const createSection = (title, links) => {
+            if (!links || links.length === 0) return;
+
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'link-section';
+            
+            const titleEl = document.createElement('h3');
+            titleEl.textContent = title;
+            sectionDiv.appendChild(titleEl);
+
+            const gridDiv = document.createElement('div');
+            gridDiv.className = 'link-grid';
+
+            links.forEach(link => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'link-item';
+                
+                const linkEl = document.createElement('a');
+                linkEl.href = link.url;
+                linkEl.target = '_blank';
+
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'link-item-icon';
+                iconDiv.style.backgroundColor = link.color || '#333';
+                iconDiv.innerHTML = svgIcons[link.icon] || '';
+                
+                const labelSpan = document.createElement('span');
+                labelSpan.className = 'link-item-label';
+                labelSpan.textContent = link.name;
+                
+                linkEl.appendChild(iconDiv);
+                linkEl.appendChild(labelSpan);
+                itemDiv.appendChild(linkEl);
+                gridDiv.appendChild(itemDiv);
+            });
+            sectionDiv.appendChild(gridDiv);
+            container.appendChild(sectionDiv);
+        };
+
+        createSection('Share', linkData.share);
+        
+        if (type && type !== 'social') {
+            createSection('Shop', linkData[type]);
+        } else if (type === 'social') {
+            createSection('Social', linkData.social);
+        }
+    }
+
+    function setModelFromGallery(globalModelIndex) {
+        const loader = document.getElementById('loader');
+        loader.style.display = 'block';
+
+        const newPath = currentMergedCollection.paths[globalModelIndex];
+        if (!newPath) {
+            console.error("Invalid global model index for gallery switch:", globalModelIndex);
+            loader.style.display = 'none';
+            return;
+        }
+
+        const slideIndex = findSlideIndexForModel(globalModelIndex);
+        if (slideIndex === -1) {
+            console.error("Could not map gallery model to a valid slider position.");
+            loader.style.display = 'none';
+            return;
+        }
+        
+        const assetKeyForSlide = currentSliderData.keys[slideIndex];
+
+        loadAndProcessGltf(newPath, (newModel) => {
+            if (!newModel) {
+                loader.style.display = 'none';
+                return;
+            }
+
+            newModel.userData.assetKey = assetKeyForSlide;
+
+            const oldModel = previewModelGroup.children.find(c => c.userData.assetKey === assetKeyForSlide);
+            if (oldModel) {
+                previewModelGroup.remove(oldModel);
+            }
+            
+            previewModelGroup.add(newModel);
+            
+            updatePreviewSlide(slideIndex);
+            loader.style.display = 'none';
+        });
+    }
+
+    function createPlayer() {
+        player = new THREE.Group();
+        player.position.set(0, 3.5, 10);
+        scene.add(player);
+
+        loadGltfModel('ufoModel', (model) => {
+            model.scale.set(0.75, 0.75, 0.75);
+            player.add(model);
+            model.traverse(node => { if (node.isMesh) node.castShadow = true; });
+        });
+
+        const spotLight = new THREE.SpotLight(0x00ffaa, 50, 15, Math.PI / 6, 0.5, 2);
+        spotLight.position.set(0, -0.5, 0);
+        spotLight.castShadow = true;
+        player.add(spotLight);
+        const spotLightTarget = new THREE.Object3D();
+        spotLightTarget.position.set(0, -10, 0);
+        player.add(spotLightTarget);
+        spotLight.target = spotLightTarget;
+
+        const playerShape = new CANNON.Sphere(1.5);
+        playerBody = new CANNON.Body({
+            mass: 50, shape: playerShape,
+            position: new CANNON.Vec3(player.position.x, player.position.y, player.position.z),
+            type: CANNON.Body.DYNAMIC, material: objectMaterial,
+            linearDamping: 0.9, angularDamping: 1.0
+        });
+
+        playerBody.addEventListener('collide', (event) => {
+            const playerHelper = hitboxHelpers.get(playerBody.id);
+            const otherHelper = hitboxHelpers.get(event.body.id);
+            if (playerHelper) showHitbox(playerHelper);
+            if (otherHelper) showHitbox(otherHelper);
+        });
+        world.addBody(playerBody);
+
+        const playerHitboxHelper = new THREE.BoxHelper(player, 0xff0000); 
+        playerHitboxHelper.visible = false;
+        scene.add(playerHitboxHelper);
+        hitboxHelpers.set(playerBody.id, playerHitboxHelper);
+    }
+
+
+    function createHitboxesAndMarkers() { 
+        const hitboxMaterial = new THREE.MeshBasicMaterial({ visible: false }); 
+        hitboxData.forEach(data => { 
+            const hitboxGeo = new THREE.BoxGeometry(data.size.x, data.size.y, data.size.z); 
+            const hitboxMesh = new THREE.Mesh(hitboxGeo, hitboxMaterial); 
+            hitboxMesh.position.copy(data.position); 
+            hitboxMesh.userData.type = data.type; 
+            hitboxMesh.userData.box = new THREE.Box3().setFromObject(hitboxMesh); 
+            scene.add(hitboxMesh); 
+            hitboxes.push(hitboxMesh); 
+            
+            const markerMat = new THREE.MeshBasicMaterial({ color: data.markerColor, transparent: true, opacity: 0.5 }); 
+            const markerMesh = new THREE.Mesh(hitboxGeo, markerMat); 
+            markerMesh.position.copy(data.position); 
+            scene.add(markerMesh); 
+            hitboxMarkers.push(markerMesh); 
+
+            // Add interactive screen
+            if (data.screenURL) {
+                const screenGeo = new THREE.PlaneGeometry(data.size.x * 3, data.size.y * 3);
+                const screenMat = new THREE.MeshStandardMaterial({
+                    color: 0x222222,
+                    metalness: 0.1,
+                    roughness: 0.8
+                });
+                const screenMesh = new THREE.Mesh(screenGeo, screenMat);
+                screenMesh.position.copy(data.position);
+                screenMesh.position.z -= data.size.z / 2 + 0.5;
+                screenMesh.userData.type = data.type;
+                screenMesh.userData.screenURL = data.screenURL;
+                screenMesh.visible = false;
+                scene.add(screenMesh);
+                interactiveScreens.push(screenMesh);
+            }
+        }); 
     }
     
-    function createPlayer() { player = new THREE.Group(); player.position.set(0, 3.5, 10); scene.add(player); const ufoBodyMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.8, roughness: 0.2 }); const bodyMesh = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.4, 32), ufoBodyMat); bodyMesh.castShadow = true; player.add(bodyMesh); const cockpitMat = new THREE.MeshStandardMaterial({ color: 0x87ceeb, transparent: true, opacity: 0.5, roughness: 0.1 }); const cockpitMesh = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), cockpitMat); cockpitMesh.position.y = 0.2; player.add(cockpitMesh); }
-    function createHitboxesAndMarkers() { const hitboxMaterial = new THREE.MeshBasicMaterial({ visible: false }); hitboxData.forEach(data => { const hitboxGeo = new THREE.BoxGeometry(data.size.x, data.size.y, data.size.z); const hitboxMesh = new THREE.Mesh(hitboxGeo, hitboxMaterial); hitboxMesh.position.copy(data.position); hitboxMesh.userData.type = data.type; hitboxMesh.userData.box = new THREE.Box3().setFromObject(hitboxMesh); scene.add(hitboxMesh); hitboxes.push(hitboxMesh); const markerMat = new THREE.MeshBasicMaterial({ color: data.markerColor, transparent: true, opacity: 0.5 }); const markerMesh = new THREE.Mesh(hitboxGeo, markerMat); markerMesh.position.copy(data.position); scene.add(markerMesh); hitboxMarkers.push(markerMesh); }); }
-    
+    function createStaticObjects() {
+        staticObjectsData.forEach(data => createStaticObject(data));
+    }
+
+    function createStaticObject(data) {
+        if (data.modelKey) {
+            loadGltfModel(data.modelKey, (model) => {
+                 const wrapper = new THREE.Group();
+                wrapper.add(model);
+                scene.add(wrapper);
+                
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                model.position.x -= center.x;
+                model.position.z -= center.z;
+                model.position.y -= box.min.y;
+
+                if (data.scale) wrapper.scale.copy(data.scale);
+                if (data.rotation) wrapper.rotation.copy(data.rotation);
+                if (data.position) wrapper.position.copy(data.position);
+
+                wrapper.traverse(node => { if (node.isMesh) { node.castShadow = true; node.receiveShadow = true; }});
+                
+                if (data.type === 'float') {
+                    wrapper.userData.originalY = data.position.y;
+                    wrapper.userData.offset = Math.random() * Math.PI * 2;
+                    floatingObjects.push(wrapper);
+                } else if (data.type === 'physics') {
+                    createPhysicsBody(data, wrapper);
+                }
+            });
+        } else {
+            let geometry;
+            switch(data.shape) {
+                case 'sphere': geometry = new THREE.SphereGeometry(data.size.x, 32, 32); break;
+                case 'tetrahedron': geometry = new THREE.TetrahedronGeometry(data.size.x, 0); break;
+                case 'box': default: geometry = new THREE.BoxGeometry(data.size.x, data.size.y, data.size.z); break;
+            }
+            const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: data.color || 0xcccccc }));
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            if (data.position) mesh.position.copy(data.position);
+            if (data.rotation) mesh.rotation.copy(data.rotation);
+            scene.add(mesh);
+
+            if (data.type === 'physics') {
+                 createPhysicsBody(data, mesh);
+            }
+        }
+    }
+
+    function createPhysicsBody(data, mesh) {
+        let shape;
+        const physicsProps = data.physics;
+        const size = physicsProps.hitboxSize || data.size;
+        const halfExtents = new CANNON.Vec3(size.x * 0.5, size.y * 0.5, size.z * 0.5);
+        shape = new CANNON.Box(halfExtents);
+        
+        if (shape) {
+            const body = new CANNON.Body({
+                mass: physicsProps.mass,
+                position: new CANNON.Vec3().copy(mesh.position),
+                shape: shape, material: objectMaterial,
+                linearDamping: 0.1, angularDamping: 0.5 
+            });
+            body.quaternion.copy(mesh.quaternion);
+            world.addBody(body);
+            
+            if (physicsProps.mass > 0) {
+                physicsObjects.push({ mesh: mesh, body: body });
+            }
+
+            const hitboxHelper = new THREE.BoxHelper(mesh, 0x00ff00);
+            hitboxHelper.visible = false;
+            scene.add(hitboxHelper);
+            hitboxHelpers.set(body.id, hitboxHelper);
+        }
+    }
+
+
+    function showHitbox(helper) {
+        helper.visible = true;
+        if (helper.userData.hideTimeout) clearTimeout(helper.userData.hideTimeout);
+        helper.userData.hideTimeout = setTimeout(() => { helper.visible = false; }, 1500);
+    }
+
+    function onScreenClick(event) {
+        if (document.getElementById('shop-ui').classList.contains('visible')) return;
+
+        const mouse = new THREE.Vector2();
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObjects(interactiveScreens);
+
+        if (intersects.length > 0) {
+            const clickedScreen = intersects[0].object;
+            if (clickedScreen.visible) {
+                window.open(clickedScreen.userData.screenURL, '_blank');
+            }
+        }
+    }
+
     function createOrbitingObjectGroup(data) {
         const group = new THREE.Group();
         group.position.copy(data.position);
@@ -520,94 +1594,210 @@
         group.userData.geometryMesh = centralMesh;
         
         const icons = [];
-        const iconMaterial = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.4 });
         data.orbitingIcons.forEach(iconData => {
-            let iconGeo;
-            switch(iconData.geometry) {
-                case 'Torus': iconGeo = new THREE.TorusGeometry(...iconData.args); break;
-                case 'Box': iconGeo = new THREE.BoxGeometry(...iconData.args); break;
-                case 'Icosahedron': iconGeo = new THREE.IcosahedronGeometry(...iconData.args); break;
-                default: iconGeo = new THREE.SphereGeometry(0.8);
-            }
-            const icon = new THREE.Mesh(iconGeo, iconMaterial);
-            icon.castShadow = true;
-            icon.userData = iconData;
-            group.add(icon);
-            icons.push(icon);
+            loadGltfModel(iconData.assetKey, (model) => {
+                model.scale.multiplyScalar(0.5);
+                model.traverse(node => { if (node.isMesh) node.castShadow = true; });
+                model.userData = iconData;
+                group.add(model);
+                icons.push(model);
+            });
         });
         group.userData.icons = icons;
         animatedGroups.push(group);
     }
     
-    function createFloatingPlatform() { const platformShape = new THREE.Shape(); const w = 110, h = 80; platformShape.moveTo(-w, 0); platformShape.bezierCurveTo(-w, h/2, -w/2, h, 0, h); platformShape.bezierCurveTo(w/2, h, w, h/2, w, 0); platformShape.bezierCurveTo(w, -h/2, w/2, -h, 0, -h); platformShape.bezierCurveTo(-w/2, -h, -w, -h/2, -w, 0); const extrudeSettings = { depth: 4, bevelEnabled: true, bevelThickness: 2, bevelSize: 3, bevelSegments: 16 }; const geometry = new THREE.ExtrudeGeometry(platformShape, extrudeSettings); geometry.center(); geometry.rotateX(Math.PI / 2); const topMaterial = new THREE.MeshStandardMaterial({ color: dayColors.ground, roughness: 0.8 }); const sideMaterial = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.8 }); return { geometry, materials: [topMaterial, sideMaterial] }; }
-    function onWindowResize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); if (previewRenderer) { const container = document.getElementById('item-details'); const rect = container.getBoundingClientRect(); previewCamera.aspect = rect.width / rect.height; previewCamera.updateProjectionMatrix(); previewRenderer.setSize(rect.width, rect.height); } }
+    function loadPlatformModel() {
+        gltfLoader.load(
+            './pulaubase1.glb',
+            (gltf) => {
+                const model = gltf.scene;
+                model.scale.set(1.2, 1.2, 1.2);
+                model.position.set(0, -25, 0);
+                model.traverse(node => {
+                    if (node.isMesh) {
+                        node.receiveShadow = true;
+                    }
+                });
+                scene.add(model);
+
+                // Create a simplified L-shaped physics body to match the platform
+                const groundBody = new CANNON.Body({ mass: 0, material: groundMaterial });
+                
+                // Box 1: Main rectangle
+                const mainBox = new CANNON.Box(new CANNON.Vec3(60, 5, 25));
+                groundBody.addShape(mainBox, new CANNON.Vec3(0, -5.5, 20));
+
+                // Box 2: The smaller part of the L
+                const legBox = new CANNON.Box(new CANNON.Vec3(20, 5, 30));
+                groundBody.addShape(legBox, new CANNON.Vec3(-30, -5.5, -45));
+
+                world.addBody(groundBody);
+            },
+            undefined,
+            (error) => {
+                console.error('An error happened while loading the platform model:', error);
+            }
+        );
+    }
+
+    function onWindowResize() { 
+        camera.aspect = window.innerWidth / window.innerHeight; 
+        camera.updateProjectionMatrix(); 
+        renderer.setSize(window.innerWidth, window.innerHeight); 
+        updatePreviewRendererSize();
+    }
+
+    function updatePreviewRendererSize() {
+        if (!previewRenderer || !previewCamera) return;
+        const container = document.getElementById('item-details');
+        
+        if (container && container.offsetParent !== null) {
+            const rect = container.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+                previewCamera.aspect = rect.width / rect.height;
+                previewCamera.updateProjectionMatrix();
+                renderer.setSize(rect.width, rect.height);
+            }
+        }
+    }
+    
     function onKeyDown(e) { if (e.code === 'KeyW' || e.code === 'ArrowUp') move.forward = 1; if (e.code === 'KeyS' || e.code === 'ArrowDown') move.backward = 1; if (e.code === 'KeyA' || e.code === 'ArrowLeft') move.left = 1; if (e.code === 'KeyD' || e.code === 'ArrowRight') move.right = 1; }
     function onKeyUp(e) { if (e.code === 'KeyW' || e.code === 'ArrowUp') move.forward = 0; if (e.code === 'KeyS' || e.code === 'ArrowDown') move.backward = 0; if (e.code === 'KeyA' || e.code === 'ArrowLeft') move.left = 0; if (e.code === 'KeyD' || e.code === 'ArrowRight') move.right = 0; }
-    function setupJoystick() { const joystick = nipplejs.create({ zone: document.getElementById('joystick-zone'), mode: 'static', position: { left: '80px', bottom: '80px' }, color: 'rgba(0, 0, 0, 0.4)', size: 120 }); joystick.on('move', (evt, data) => { const angle = data.angle.radian, force = Math.min(data.force, 1); const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).setY(0); const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion).setY(0); targetVelocity = forward.multiplyScalar(Math.sin(angle)).add(right.multiplyScalar(Math.cos(angle))).multiplyScalar(force * 0.4); }); joystick.on('end', () => { targetVelocity.set(0, 0, 0); }); }
     
-    function updatePlayer() { if (!player) return; if (!('ontouchstart' in window)) { const speed = 0.4; const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).setY(0); const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion).setY(0); targetVelocity.set(0,0,0).add(forward.multiplyScalar(move.forward - move.backward)).add(right.multiplyScalar(move.right - move.left)); if(targetVelocity.length() > 0) targetVelocity.normalize().multiplyScalar(speed); } velocity.lerp(targetVelocity, 0.1); if (velocity.length() > 0.01) player.position.add(velocity); player.position.y = 3.5 + Math.sin(clock.getElapsedTime() * 1.5) * 0.3; const tiltTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(velocity.z * 1.5, 0, -velocity.x * 1.5, 'XYZ')); player.quaternion.slerp(tiltTarget, 0.1); }
+    function setupJoystick() {
+        const joystick = nipplejs.create({
+            zone: document.getElementById('joystick-zone'),
+            mode: 'static', position: { left: '80px', bottom: '80px' },
+            color: 'rgba(0, 0, 0, 0.4)', size: 120
+        });
+        joystick.on('move', (evt, data) => {
+            const angle = data.angle.radian, force = Math.min(data.force, 1);
+            const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).setY(0);
+            const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion).setY(0);
+            targetVelocity = forward.multiplyScalar(Math.sin(angle)).add(right.multiplyScalar(Math.cos(angle))).multiplyScalar(force * 0.8);
+        });
+        joystick.on('end', () => { targetVelocity.set(0, 0, 0); });
+    }
+    
+    function updatePlayer() {
+        if (!player || !playerBody) return;
+
+        if (!('ontouchstart' in window)) {
+            const speed = 0.8;
+            const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).setY(0);
+            const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion).setY(0);
+            targetVelocity.set(0, 0, 0).add(forward.multiplyScalar(move.forward - move.backward)).add(right.multiplyScalar(move.right - move.left));
+            if (targetVelocity.length() > 0) targetVelocity.normalize().multiplyScalar(speed);
+        }
+        
+        velocity.lerp(targetVelocity, 0.15);
+
+        const hoverY = 3.5 + Math.sin(clock.getElapsedTime() * 1.5) * 0.3;
+        const yVelocity = (hoverY - playerBody.position.y) * 5;
+
+        playerBody.velocity.set(velocity.x * 25, yVelocity, velocity.z * 25);
+        
+        if (velocity.lengthSq() > 0.001) {
+            const targetAngle = Math.atan2(velocity.x, velocity.z);
+            const targetRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), targetAngle);
+            player.quaternion.slerp(targetRotation, 0.15);
+        }
+    }
     
     function updateInteractions() { 
         if (!player) return; 
         playerBox.setFromObject(player); 
-        const socialPanel = document.getElementById('social-panel');
         const shopPanel = document.getElementById('shop-ui');
         let isShopOpen = shopPanel.classList.contains('visible');
-        let isSocialOpen = socialPanel.classList.contains('visible');
 
-        let intersectingShop = false;
-        let intersectingSocial = false;
-
+        let intersectingShopType = null;
         for (const hitbox of hitboxes) {
             if (playerBox.intersectsBox(hitbox.userData.box)) {
-                if (hitbox.userData.type === 'social') intersectingSocial = true;
-                else if (hitbox.userData.type === 'shop') intersectingShop = true;
+                const type = hitbox.userData.type;
+                // --- MODIFIED: Added 'social' to the list of panel types ---
+                if (type === 'padvy' || type === 'mrn' || type === 'invonite' || type === 'social') {
+                    intersectingShopType = type;
+                }
             }
         }
         
-        // Logic for Social Panel
-        if(intersectingSocial && !isSocialOpen) socialPanel.classList.add('visible');
-        else if (!intersectingSocial && isSocialOpen) socialPanel.classList.remove('visible');
+        interactiveScreens.forEach(screen => {
+            screen.visible = (screen.userData.type === intersectingShopType);
+        });
 
-        // NEW Logic for Shop Panel
-        if (intersectingShop) {
+        if (intersectingShopType) {
             if (canOpenShopPanel && !isShopOpen) {
-                setShopUIVisibility(true);
-                const activeTab = document.querySelector('.tab-button.active');
-                updateShopCategory(activeTab ? activeTab.textContent : Object.keys(productCategories)[0]);
+                activePanelType = intersectingShopType;
+                buildTabs(activePanelType);
+                setShopUIVisibility(true, activePanelType);
+            } else if (isShopOpen && activePanelType !== intersectingShopType) {
+                activePanelType = intersectingShopType;
+                buildTabs(activePanelType);
+                 const shopBg = document.getElementById('shop-ui-background');
+                 const hitbox = hitboxData.find(h => h.type === activePanelType);
+                 if (hitbox && hitbox.panelColor) {
+                    shopBg.style.backgroundColor = hitbox.panelColor;
+                 }
             }
         } else {
-            // Player is outside the hitbox
             if (isShopOpen) {
                 setShopUIVisibility(false);
+                activePanelType = null;
             }
-            // Reset the ability to open the panel, so it opens on next entry
             canOpenShopPanel = true;
         }
 
-        targetMaxDistance = intersectingShop ? 15 : 30; 
+        targetMaxDistance = intersectingShopType ? 10 : 15;
     }
 
     function animate() {
-        requestAnimationFrame(animate); const deltaTime = clock.getDelta(), elapsedTime = clock.getElapsedTime();
+        requestAnimationFrame(animate); 
+        const deltaTime = Math.min(clock.getDelta(), 0.1);
+        const elapsedTime = clock.getElapsedTime();
+        
+        if (world) world.step(1/60, deltaTime, 10);
+        
+        physicsObjects.forEach(obj => {
+            obj.mesh.position.copy(obj.body.position);
+            obj.mesh.quaternion.copy(obj.body.quaternion);
+        });
+
+        if(player && playerBody){
+            player.position.copy(playerBody.position);
+        }
+
+        hitboxHelpers.forEach(helper => helper.update());
+
+        floatingObjects.forEach(obj => {
+            obj.rotation.y += 0.005; 
+            obj.position.y = obj.userData.originalY + Math.sin(elapsedTime * 1.2 + obj.userData.offset) * 0.5;
+        });
+
         animatedGroups.forEach(group => {
             group.userData.geometryMesh.rotation.y += 0.005; group.userData.geometryMesh.rotation.x += 0.003;
-            group.userData.icons.forEach(icon => {
-                const data = icon.userData;
-                const time = elapsedTime * data.speed + data.offset;
-                icon.position.set(Math.cos(time) * data.orbitRadius, Math.sin(time * 2) * 2.5, Math.sin(time) * data.orbitRadius);
-                icon.rotation.x = time * 0.5;
-                icon.rotation.y = time * 0.3;
-            });
+            if(group.userData.icons) {
+                group.userData.icons.forEach(icon => {
+                    const data = icon.userData;
+                    const time = elapsedTime * data.speed + data.offset;
+                    icon.position.set(Math.cos(time) * data.orbitRadius, Math.sin(time * 2) * 2.5, Math.sin(time) * data.orbitRadius);
+                    icon.rotation.x = time * 0.5;
+                    icon.rotation.y = time * 0.3;
+                });
+            }
         });
         hitboxMarkers.forEach(marker => { marker.material.opacity = Math.sin(elapsedTime * 4) * 0.2 + 0.4; });
-        updatePlayer(); updateInteractions();
+        
+        updatePlayer(); 
+        updateInteractions();
+        
         if (player) {
             const targetPosition = player.position.clone().add(new THREE.Vector3(0, 2, 0));
-            controls.target.lerp(targetPosition, 0.1);
+            controls.target.copy(targetPosition);
             const p = player.position;
-            document.getElementById('coordinates-ui').innerText = `Position: X:${p.x.toFixed(1)} Y:${p.y.toFixed(1)} Z:${p.z.toFixed(1)}`;
+            document.getElementById('coordinates-ui').innerText = `Posisi: X:${p.x.toFixed(1)} Y:${p.y.toFixed(1)} Z:${p.z.toFixed(1)}`;
         }
+        
         controls.maxDistance = THREE.MathUtils.lerp(controls.maxDistance, targetMaxDistance, 0.05);
         controls.update();
         renderer.render(scene, camera);
@@ -618,6 +1808,7 @@
         }
     }
     init();
+
   </script>
 </body>
 </html>
